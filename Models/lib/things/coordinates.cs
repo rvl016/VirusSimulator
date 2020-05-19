@@ -12,7 +12,7 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       this.z = zCoordinate;
     }
 
-    private float getDistance( Coordinates that) {
+    public float getDistance( Coordinates that) {
       if (this.z != that.z)
         return float.MaxValue;
       return (float) Math.Sqrt( (float) Math.Pow( this.x - that.x, 2) + 

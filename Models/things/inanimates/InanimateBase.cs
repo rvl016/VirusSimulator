@@ -1,11 +1,8 @@
 
-
-namespace VirusSimulatorAvalonia.Models.inanimates
-{
-    public abstract class InanimateBase
-    {
-        public abstract int oi;
-         // It can hold animates
-         // It can be open or close
-    }
+namespace VirusSimulatorAvalonia.Models.things.inanimates {
+  public abstract class Inanimate {
+    public abstract int oi;
+      // It can hold animates
+      // It can be open or close
+  }
 }

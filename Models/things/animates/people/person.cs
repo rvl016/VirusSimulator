@@ -1,25 +1,80 @@
-namespace VirusSimulatorAvalonia.Models.animates.people {
-  public class person {
-    // all
-      // how many
-      // how many infected
+using System;
+using System.Collections.Generic;
+using VirusSimulatorAvalonia.Models.lib.events;
+using VirusSimulatorAvalonia.Models.things.animates;
+
+namespace VirusSimulatorAvalonia.Models.things.animates.people {
+  public sealed class Person : Animate<Person> {
+
+    public bool isUsingMask;
+    public bool isImmune; 
+    public short age;
+    public float healthIndex;
+    public Virus virus;
+    public Target routineTarget;
+    public Route pathRoutes;
+    public Person interactingWith;
+    public List<Person> friends;
+    public Vehicle ownVehicle;
+    public Acommodable acommodation; 
     
-    // each 
-      // have age
-      // have health index
-      // have infected status
-      // have mask status
-      // have ?
+    // how to make getIn and getOutgeneric to fit people, vehicles and paths?
+    private bool getIn( Acommodable acommodable) {
+      if (acommodable.host( this)) {
+        this.acommodation = acommodable;
+        return true;
+      }
+      return false;
+    } 
 
-      // can travel
-        // by car, on foot, by bus 
-          // to work
-          // to school
-          // to home
-          // for entertainment
-          // for hang around
-          // for groceries
+    // only people and vehicles getOut just reproduce
+    private void getOutAcommodation() {
+      this.acommodation.eject( this.id);
+      this.acommodation = null;
+    }
 
+    private override void iterateThroughPath() {
 
-}
+    }
+
+    // Only vehicles and people should do this
+    protected override void defineNextTarget() {
+      this.target = this.routineTarget.getNextTarget();
+    }
+      
+    private void endInteraction() {
+      this.interactingWith = null;
+      this.iterateThroughPath();
+    }
+    private void interactWith( Person person, bool areFriends) {
+      uint interactionTime = RandomEvents.getPeopleMutualInteractionTime(
+        areFriends);
+      this.interactingWith = person;
+      person.interactWithFor( this, interactionTime);
+      this.callSchedulerFor( this.endInteraction, interactionTime);
+    }
+      
+    public void interactWithFor( Person person, uint interactionTime) {
+      this.interactingWith = person;
+      this.callSchedulerFor( this.endInteraction, interactionTime);
+    }
+
+    protected override List<Person> getSight() {
+      return this.accomodation.getPeopleNextTo( this).FindAll( 
+        person => this.coordinates.getDistance( person.coordinates) < 
+        Consts.personRadius);
+    }
+    
+    private void tryToInteractWithPeople() {
+      List<Person> peopleOnThisSight = getSight();
+      peopleOnThisSight.ForEach( person => {
+        bool areFriends = this.friends.Exists( friend => friend == person);
+        if (RandomEvents.bothWillInteractTogether( areFriends) &&
+          person.interactingWith == null) {
+          this.interactWith( person, areFriends);
+          return;
+        }
+      });
+    }
+  }
 }
