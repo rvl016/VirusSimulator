@@ -11,12 +11,12 @@ namespace VirusSimulatorAvalonia.Models.lib.schedule {
 
     private static List<ActionHeap> heapTrees;
 
-    ActionHeap( long timestamp, Action actionPtr) {
+    ActionHeap( Action actionPtr, long timestamp) {
       this.timestamp = timestamp;
       this.actionPtr = actionPtr;
     } 
 
-    public static void insert( long timeStamp, Action actionPtr) {
+    public static void insert( Action actionPtr, long timeStamp) {
 
     }
 

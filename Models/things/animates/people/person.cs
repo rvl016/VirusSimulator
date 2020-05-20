@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using VirusSimulatorAvalonia.Models.lib.things;
 using VirusSimulatorAvalonia.Models.lib.events;
 using VirusSimulatorAvalonia.Models.things.animates;
 
@@ -8,7 +9,7 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
 
     public bool isUsingMask;
     public bool isImmune; 
-    public short age;
+    public ushort age;
     public float healthIndex;
     public Virus virus;
     public Target routineTarget;
@@ -16,21 +17,21 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
     public Person interactingWith;
     public List<Person> friends;
     public Vehicle ownVehicle;
-    public Acommodable acommodation; 
+    public Accommodable accommodation; 
     
     // how to make getIn and getOutgeneric to fit people, vehicles and paths?
-    private bool getIn( Acommodable acommodable) {
-      if (acommodable.host( this)) {
-        this.acommodation = acommodable;
-        return true;
-      }
-      return false;
+    private bool TryToGetIn( Accommodable accommodable) {
+      if (! accommodable.canAccommodate( this))
+        return false;
+      accommodable.host( this);
+      this.accommodation = accommodable;
+      return true;
     } 
 
     // only people and vehicles getOut just reproduce
     private void getOutAcommodation() {
-      this.acommodation.eject( this.id);
-      this.acommodation = null;
+      this.accommodation.eject( this);
+      this.accommodation = null;
     }
 
     private override void iterateThroughPath() {
@@ -60,7 +61,7 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
     }
 
     protected override List<Person> getSight() {
-      return this.accomodation.getPeopleNextTo( this).FindAll( 
+      return this.accommodation.getPeopleNextTo( this).FindAll( 
         person => this.coordinates.getDistance( person.coordinates) < 
         Consts.personRadius);
     }

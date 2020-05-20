@@ -1,36 +1,72 @@
 using System;
+using VirusSimulatorAvalonia.Models.lib.events;
 using VirusSimulatorAvalonia.Models.things;
 using VirusSimulatorAvalonia.Models.things.animates;
 using VirusSimulatorAvalonia.Models.things.animates.people;
 
-namespace VirusSimulatorAvalonia.Models.viruses {
+namespace VirusSimulatorAvalonia.Models.things.viruses {
   public sealed class Virus : Thing {
 
     float currentInfectionRadius;
+    ulong whenImmunityWillSettleInSecs;
     Person host;
     Virus( Person host) : 
-      base( 0.0f, 0.0f, 0) {
+      base( host.coordinates) {
+      host.virus = this;
       this.host = host;
       this.setIncubation();
-      this.changeStatus( Consts.incubating, true);
     }
-
-    ~Virus() {
-      // take virus out of things package
-    }
-
     public override Dictionary<string,string> dumpProperties() {
 
     }
 
-    private override void iterateLifeCycle() {
-
+    private void setIncubation() {
+      this.changeStatus( Consts.incubating, true);
+      uint incubationTime = RandomEvents.getVirusIncubationTimeByAgeAndHealthIdx(
+        this.host.age, this.host.healthIndex);
+      callSchedulerForLater( this.terminateIncubation, incubationTime);
     }
 
-    private void tryToKillHost() {
-
+    private void terminateIncubation() {
+      this.changeStatus( Consts.incubating, false);
+      this.defineWhenImmunityWillSettle();
+      this.iterateLifeCycle();
     }
 
+    private void defineWhenImmunityWillSettle() {
+      this.whenImmunityWillSettleInSecs = God.secondsSinceEpoch + 
+        RandomEvents.howManySecsSpreadingWillLastByAgeAndHealthIdx(
+        this.host.age, this.host.healthIndex);
+    }
 
+    protected override void iterateLifeCycle() {
+      if (God.secondsSinceEpoch >= this.whenImmunityWillSettleInSecs) {
+        this.host.becomeImmune();
+        this.die();
+        return;
+      }
+      this.tryToInfectPeople();
+      if (this.willKillHost()) {
+        this.killHost();
+        return;
+      }
+      this.callSchedulerFor( this.iterateLifeCycle);
+    }
+
+    private bool willKillHost() {
+      return RandomEvents.virusWillKillHostByAgeAndHealthIdx(
+        this.host.age, this.host.healthIndex);
+    }
+
+    private void killHost() {
+      this.host.die();
+      this.die();
+    }
+
+    private void die() {
+      this.host.virus = null;
+      this.host = null;
+      ThingsPackage.delVirus( this);
+    }
   }
 }

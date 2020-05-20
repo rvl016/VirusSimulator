@@ -13,7 +13,23 @@ namespace VirusSimulatorAvalonia.Models.lib.events {
       return false;
     }
 
-    public static bool virusWillKillHost( uint hostAge, uint hostHealthIndex) {
+    // Virus Related
+    public static bool virusWillKillHost( ushort hostAge, float hostHealthIndex) {
+      return true;
+    }
+
+    public static uint getVirusIncubationTimeByAgeAndHealthIdx( 
+      ushort hostAge, float hostHealthIndex) {
+      return 10;
+    }
+
+    public static uint howManySecsSpreadingWillLastByAgeAndHealthIdx(
+      ushort hostAge, float hostHealthIndex) {
+      return 10;
+    }
+    
+    public static bool virusWillKillHostByAgeAndHealthIdx(
+      ushort hostAge, float hostHealthIndex) {
       return true;
     }
   }

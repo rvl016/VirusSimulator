@@ -7,8 +7,8 @@ namespace VirusSimulatorAvalonia.Models.lib.schedule {
       UrgentQueue.enqueue( action);
     }
 
-    public static void scheduleTask( long whenInSeconds, Action action) {
-      ActionHeap.insert( whenInSeconds, action);
+    public static void scheduleTask( Action action, long whenInSeconds) {
+      ActionHeap.insert( action, whenInSeconds);
     }
   }
 }
