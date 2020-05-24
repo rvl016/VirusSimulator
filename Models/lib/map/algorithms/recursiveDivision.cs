@@ -54,7 +54,6 @@ namespace VirusSimulatorAvalonia.Models.lib.map.algorithms {
       this.minSpaceBetweenStreets = minSpaceBetweenStreets;
       makeSubMapQuadrants( 0, 0, (uint) map.GetUpperBound( 1), 
         (uint) map.GetUpperBound( 0));
-      highlightBounds();     
       return this.map;
     }
   }

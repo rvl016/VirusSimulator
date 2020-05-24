@@ -14,10 +14,24 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths {
       base( xCoordinate, yCoordinate, halfWidth, halfHeight) {
     }
 
+    protected abstract void makePathNodes();
+
+    public abstract List<Node> getPedestrianPathNodes( ushort direction);
+
+    public abstract List<Node> getVehiclePathNodes( ushort direction);
+    
     public override void makeEndPointOn( Path endpoint) {
       this.endPoints.Add( endpoint);
     }
 
-    public abstract void makePathNodes();
+    protected float getRoadMiddleRelativeWidth() {
+      return this.halfWidth * Consts.road2sidewalkRatio / 
+        (Consts.road2sidewalkRatio + 1.0f) / 2.0f;     
+    }
+
+    protected float getSidewalkMiddleRelativeWidth() {
+      return this.halfWidth * (Consts.road2sidewalkRatio + .5f) /
+        (Consts.road2sidewalkRatio + 1.0f);
+    }
   }
 }

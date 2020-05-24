@@ -2,9 +2,9 @@ using System;
 
 namespace VirusSimulatorAvalonia.Models.lib.things {
   public sealed class Coordinates {
-    float x;
-    float y;
-    ushort z;
+    public float x;
+    public float y;
+    public ushort z;
 
     public Coordinates( float xCoordinate, float yCoordinate, ushort zCoordinate) {
       this.x = xCoordinate;
@@ -17,6 +17,10 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
         return float.MaxValue;
       return (float) Math.Sqrt( (float) Math.Pow( this.x - that.x, 2) + 
         (float) Math.Pow( this.y - that.y, 2));
+    }
+
+    public Coordinates getRelativeCoordinates( float deltaX, float deltaY) {
+      return new Coordinates( this.x + deltaX, this.y + deltaY, this.z);
     }
   }
 }

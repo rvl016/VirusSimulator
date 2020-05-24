@@ -1,5 +1,8 @@
 using System;
+using VirusSimulatorAvalonia.Models.defs;
 using VirusSimulatorAvalonia.Models.things.inanimates.paths;
+using VirusSimulatorAvalonia.Models.things.inanimates.paths.corner;
+using VirusSimulatorAvalonia.Models.things.inanimates.paths.street;
 
 namespace VirusSimulatorAvalonia.Models.lib.map {
   sealed class Mapper {
@@ -25,11 +28,50 @@ namespace VirusSimulatorAvalonia.Models.lib.map {
         "Map blueprint doesn't have street marker on first line.");
     }
 
-    private void makePaths( uint x, uint y) {
-      if (this.map[x,y] < 0) return;
-      if (this.map[x,y] > 1) {
-        new Corner()
+    private void goThroughDirectionsFromCorner( uint x, uint y, Corner corner) {
+      if (this.map[y,x + 1] > 0)
+        makePaths( x + 1, y, Defs.right, corner);
+      if (this.map[y,x + 1] > 0)
+        makePaths( x, y + 1, Defs.lower, corner);
+      if (this.map[y,x - 1] > 0)
+        makePaths( x - 1, y, Defs.left, corner);
+      if (this.map[y - 1,x] > 0)
+        makePaths( x, y - 1, Defs.upper, corner);
+    }
+
+    private void goThroughStreet( uint startX, uint startY, ushort direction, 
+      Corner corner) {
+      uint x = startX;
+      uint y = startY;
+      int dx = direction == Defs.right ? 1 : (direction == Defs.left ? -1 : 0);
+      int dy = direction == Defs.lower ? 1 : (direction == Defs.upper ? -1 : 0);
+      uint streetLength = 0;
+      do {
+        streetLength++;
+        this.map[y,x] = -1;
+        x = (uint) (x + dx);
+        y = (uint) (y + dy);
+      } while (this.map[y,x] == 1);
+      uint length = dx == 1 ? x - startX : dx == -1 ? startX - x : dy == 1 ? 
+        y - startY : startY - y;
+      makeStreet()
+      Street newStreet = new Street( startX * Consts.roadWidth + 
+        Consts.roadHalfWidth, startY * Consts.roadWidth + Consts.roadHalfWidth, 
+        Consts.roadHalfWidth, length * Consts.roadWidth, direction == Defs.upper || direction == Defs.lower ? Defs.vertical : Defs.horizontal, corner);
+    }
+
+    private void makePathAtWithDirectionAndFromCorner( uint x, uint y, 
+      uint direction, Corner corner = null) {
+      Path path;
+      if (this.map[y,x] < 0) return;
+      if (this.map[y,x] > 1) {
+        this.map[x,y] = -1;
+        this.goThroughDirectionFromCorner( x, y, new Corner( x * 
+          Consts.roadWidth + Consts.roadHalfWidth, y * Consts.roadHalfWidth + 
+          Consts.roadHalfWidth, Consts.roadHalfWidth, corner));
+        return;
       }
+      this.defineStreetFromWithDirectionAndFromCorner( x, y, direction, corner);
     }
 
     private void makeCrossesOnBounds() {

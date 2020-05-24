@@ -1,5 +1,5 @@
-using System.Linq;
 using System.Collections.Generic;
+using VirusSimulatorAvalonia.Models.defs;
 
 namespace VirusSimulatorAvalonia.Models.lib.things {
 
@@ -14,22 +14,40 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
 
     }
 
-    public Node makeNodeInPathOnCoordinates( Navegable path, float xCoordinate, 
-      float yCoordinate) {
+    public static Node makeNodeInPathWithCoordinates( Navegable path, 
+      Coordinates coordinates) {
       Node newNode = new Node();
       Node masterNode = path.currentMasterNode;
-      masterNode.neighbors.Append( newNode);
-      this.coordinates = new Coordinates( xCoordinate, yCoordinate, 0);
+      masterNode.neighbors.Add( newNode);
+      newNode.nodeOwner = path;
+      newNode.coordinates = coordinates;
       return newNode;
     } 
 
-    public void makeLinkFromTo( Node fromNode, Node toNode) {
-      fromNode.neighbors.Append( toNode);
+    public static void makeLinkFromTo( Node fromNode, Node toNode) {
+      fromNode.neighbors.Add( toNode);
     }
 
-    public void makeDoubleLink( Node nodeOne, Node nodeTwo) {
+    public static void makeDoubleLinkBetween( Node nodeOne, Node nodeTwo) {
       makeLinkFromTo( nodeOne, nodeTwo);
       makeLinkFromTo( nodeTwo, nodeOne);
+    }
+
+    public Node getNeighbourWithDirection( ushort direction) {
+      Node node = null;
+      if (direction == Defs.right)
+        node = this.neighbors.Find( node => (node.coordinates.x - 
+          this.coordinates.x) > Consts.floatingPointMargin);
+      if (direction == Defs.lower)
+        node = this.neighbors.Find( node => (node.coordinates.y - 
+          this.coordinates.y) > Consts.floatingPointMargin);
+      if (direction == Defs.left)
+        node = this.neighbors.Find( node => (node.coordinates.x - 
+          this.coordinates.x) < -Consts.floatingPointMargin);
+      if (direction == Defs.upper)
+        node = this.neighbors.Find( node => (node.coordinates.y - 
+          this.coordinates.y) < -Consts.floatingPointMargin);
+      return node;
     }
   }
 }
