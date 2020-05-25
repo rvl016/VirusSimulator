@@ -1,10 +1,11 @@
 using System;
 using VirusSimulatorAvalonia.Models.lib.events;
+using VirusSimulatorAvalonia.Models.hidden.god.world;
 using VirusSimulatorAvalonia.Models.things;
 using VirusSimulatorAvalonia.Models.things.animates;
 using VirusSimulatorAvalonia.Models.things.animates.people;
 
-namespace VirusSimulatorAvalonia.Models.things.viruses {
+namespace VirusSimulatorAvalonia.Models.things.virus {
   public sealed class Virus : Thing {
 
     float currentInfectionRadius;
@@ -12,6 +13,7 @@ namespace VirusSimulatorAvalonia.Models.things.viruses {
     Person host;
     Virus( Person host) : 
       base( host.coordinates) {
+      ThingsPackage.add( this);
       host.virus = this;
       this.host = host;
       this.setIncubation();

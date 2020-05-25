@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using VirusSimulatorAvalonia.Models.lib.things;
 
 namespace VirusSimulatorAvalonia.Models.things {
+
   public abstract class Thing {
     
     protected static uint maxId = 0;
     public uint id;
-    public short status;
+    public ushort status;
 
     public Action nextAction;
     public Action scheduledAction;
@@ -26,7 +27,7 @@ namespace VirusSimulatorAvalonia.Models.things {
     protected abstract void iterateLifeCycle();
     protected void changeStatus( short changedStateParam, bool isTrue) {
       short paramIsTrue = (short) (isTrue ? 1 : 0);
-      this.status = (short) ((this.status & ~ changedStateParam) & (changedStateParam * 
+      this.status = (ushort) ((this.status & ~ changedStateParam) & (changedStateParam * 
         paramIsTrue));
     }
 

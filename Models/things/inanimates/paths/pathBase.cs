@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using VirusSimulatorAvalonia.Models.lib.things;
 using VirusSimulatorAvalonia.Models.things.inanimates;
@@ -20,6 +21,25 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths {
 
     public abstract List<Node> getVehiclePathNodes( ushort direction);
     
+    public abstract void connectToVehiclePathOnDirection( Path that, 
+      ushort direction);
+
+    public void connectToPedestrianPathOnDirection( Path that, 
+      ushort direction) {
+      List<Node> thisNodes = this.getPedestrianPathNodes( direction);
+      List<Node> thatNodes = that.getPedestrianPathNodes( 
+        Defs.oppositeDirectionOf( direction));
+      thatNodes = thatNodes.OrderBy( node => thisNodes.First().coordinates.
+        getDistance( node.coordinates)).ToList();
+      Node.makeDoubleLinkBetween( thisNodes.First(), thatNodes.First()); 
+      Node.makeDoubleLinkBetween( thisNodes.Last(), thatNodes.Last()); 
+    }
+
+    public void connectToPathOnDirection( Path that, ushort direction) {
+      this.connectToPedestrianPathOnDirection( that, direction);
+      this.connectToVehiclePathOnDirection( that, direction);
+    }
+
     public override void makeEndPointOn( Path endpoint) {
       this.endPoints.Add( endpoint);
     }
@@ -33,5 +53,6 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths {
       return this.halfWidth * (Consts.road2sidewalkRatio + .5f) /
         (Consts.road2sidewalkRatio + 1.0f);
     }
+
   }
 }

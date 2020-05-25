@@ -1,12 +1,14 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using VirusSimulatorAvalonia.Models.lib.things;
+using VirusSimulatorAvalonia.Models.hidden.god.world;
 using VirusSimulatorAvalonia.Models.defs;
 using VirusSimulatorAvalonia.Models.things.inanimates.paths;
 
 namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.corner {
 
-  sealed class Corner : Path {
+  public sealed class Corner : Path {
 
     public List<Node> pedestrianNodes;
     public List<Node> vehicleNodes;
@@ -14,11 +16,29 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.corner {
     public Corner( float xCoordinate, float yCoordinate, float halfWidth, Path path = null) : 
       base( xCoordinate, yCoordinate, halfWidth, 
       halfWidth) {
+      ThingsPackage.add( this);
       if (path != null)
         this.endPoints = new List<Path> { path };
       this.makePathNodes();
     }
 
+    public override void connectToVehiclePathOnDirection( Path that, 
+      ushort direction) {
+      List<Node> thisNodes = this.getVehiclePathNodes( direction);
+      List<Node> thatNodes = that.getVehiclePathNodes( 
+        Defs.oppositeDirectionOf( direction));
+      thatNodes = thatNodes.OrderBy( node => thisNodes.First().coordinates.
+        getDistance( node.coordinates)).ToList();
+      // 0 neighbor implies that that street node is right handed
+      if (thatNodes.First().neighbors.Count() == 0) {
+        Node.makeLinkFromTo( thatNodes.First(), thisNodes.First()); 
+        Node.makeLinkFromTo( thisNodes.Last(), thatNodes.Last());
+      }
+      else {
+        Node.makeLinkFromTo( thisNodes.First(), thatNodes.First()); 
+        Node.makeLinkFromTo( thatNodes.Last(), thisNodes.Last());
+      }
+    } 
 
     private List<Node> makeNodeQuadrature( 
       Action<Node,Node> linkFunction, float relativeWidth) {

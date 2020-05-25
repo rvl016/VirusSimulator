@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using VirusSimulatorAvalonia.Models.defs;
+using VirusSimulatorAvalonia.Models.things.inanimates.buildings;
 
 namespace VirusSimulatorAvalonia.Models.lib.things {
 
@@ -8,11 +9,8 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
     public static Node vehicleMasterNode = new Node();
     public Navegable nodeOwner;
     public List<Node> neighbors;
+    public Building entryPoint = null;
     public Coordinates coordinates;
-
-    private Node() {
-
-    }
 
     public static Node makeNodeInPathWithCoordinates( Navegable path, 
       Coordinates coordinates) {
@@ -24,13 +22,32 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       return newNode;
     } 
 
+    public void switchMutualNeighborsFromTo( Node fromNode, Node toNode) {
+      Node.removeDoubleLinkBetween( this, fromNode);
+      Node.makeDoubleLinkBetween( this, toNode);
+    }
+
+    public void switchNeighborFromTo( Node fromNode, Node toNode) {
+      Node.removeLinkFromTo( this, fromNode);
+      Node.makeLinkFromTo( this, toNode);
+    }
+
     public static void makeLinkFromTo( Node fromNode, Node toNode) {
       fromNode.neighbors.Add( toNode);
+    }
+
+    public static void removeLinkFromTo( Node fromNode, Node toNode) {
+      fromNode.neighbors.Remove( toNode);
     }
 
     public static void makeDoubleLinkBetween( Node nodeOne, Node nodeTwo) {
       makeLinkFromTo( nodeOne, nodeTwo);
       makeLinkFromTo( nodeTwo, nodeOne);
+    }
+
+    public static void removeDoubleLinkBetween( Node nodeOne, Node nodeTwo) {
+      removeLinkFromTo( nodeOne, nodeTwo);
+      removeLinkFromTo( nodeTwo, nodeOne);
     }
 
     public Node getNeighbourWithDirection( ushort direction) {
@@ -48,6 +65,11 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
         node = this.neighbors.Find( node => (node.coordinates.y - 
           this.coordinates.y) < -Consts.floatingPointMargin);
       return node;
+    }
+
+    public static int findIndexOfBreakingPointFromBy( List<Node> fromList, 
+      Node byNode) {
+      if ()
     }
   }
 }

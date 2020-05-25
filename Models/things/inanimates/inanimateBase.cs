@@ -1,10 +1,13 @@
 using System.Collections.Generic;
+using VirusSimulatorAvalonia.Models.defs;
 using VirusSimulatorAvalonia.Models.lib.things;
 using VirusSimulatorAvalonia.Models.things.inanimates.paths;
 
 
 namespace VirusSimulatorAvalonia.Models.things.inanimates {
+
   public abstract class Inanimate : Thing {
+
     public List<Path> endPoints;
     public float halfWidth;
     public float halfHeight;
@@ -25,11 +28,11 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates {
     public abstract void makeEndPointOn( Path endpoint);
 
     public void setOpen( bool open) {
-      this.changeStatus( Consts.open, open);  
+      this.changeStatus( Defs.open, open);  
     }
 
     public bool isOpen() {
-      return this.statusIncludes( Consts.open);
+      return this.statusIncludes( Defs.open);
     }
   }
 }

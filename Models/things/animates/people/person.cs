@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using VirusSimulatorAvalonia.Models.lib.things;
 using VirusSimulatorAvalonia.Models.lib.events;
+using VirusSimulatorAvalonia.Models.hidden.god.world;
 using VirusSimulatorAvalonia.Models.things.animates;
+using VirusSimulatorAvalonia.Models.things.virus;
 
 namespace VirusSimulatorAvalonia.Models.things.animates.people {
   public sealed class Person : Animate<Person> {
@@ -19,7 +21,12 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
     public Vehicle ownVehicle;
     public Accommodable accommodation; 
     
-    // how to make getIn and getOutgeneric to fit people, vehicles and paths?
+    public Person( Residence house, ushort houseFloor) : 
+      base( house.coordinates.xCoordinate, 
+        house.coordinates.yCoordinate, houseFloor) {
+      ThingsPackage.add( this);
+    } 
+
     private bool TryToGetIn( Accommodable accommodable) {
       if (! accommodable.canAccommodate( this))
         return false;
@@ -28,7 +35,6 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
       return true;
     } 
 
-    // only people and vehicles getOut just reproduce
     private void getOutAcommodation() {
       this.accommodation.eject( this);
       this.accommodation = null;
@@ -52,12 +58,12 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
         areFriends);
       this.interactingWith = person;
       person.interactWithFor( this, interactionTime);
-      this.callSchedulerFor( this.endInteraction, interactionTime);
+      this.callSchedulerForLater( this.endInteraction, interactionTime);
     }
       
     public void interactWithFor( Person person, uint interactionTime) {
       this.interactingWith = person;
-      this.callSchedulerFor( this.endInteraction, interactionTime);
+      this.callSchedulerForLater( this.endInteraction, interactionTime);
     }
 
     protected override List<Person> getSight() {

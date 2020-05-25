@@ -8,7 +8,7 @@ namespace VirusSimulatorAvalonia.Models.things.animates {
 
     protected Inanimate target;
 
-    Animate( float xCoordinate, float yCoordinate, ushort zCoordinate) : 
+    protected Animate( float xCoordinate, float yCoordinate, ushort zCoordinate) : 
       base( xCoordinate, yCoordinate, zCoordinate) {
       this.target = null;
       this.nextAction = null;
