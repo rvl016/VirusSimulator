@@ -66,10 +66,5 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
           this.coordinates.y) < -Consts.floatingPointMargin);
       return node;
     }
-
-    public static int findIndexOfBreakingPointFromBy( List<Node> fromList, 
-      Node byNode) {
-      if ()
-    }
   }
 }

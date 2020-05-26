@@ -15,6 +15,7 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
     public List<Node> rightSidePedestrianPathNodes;
     public List<Node> leftSidePedestrianPathNodes;
     public List<Node> leftSideVehiclePathNodes;
+    public List<Node> currentPathNodeList;
     public List<Building> rightSideBuildings;
     public List<Building> leftSideBuildings;
 
@@ -130,157 +131,74 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
         this.coordinates.y);
     }
 
-    private Node makeEntryPointNodeFromBy( List<Node> nodes, 
-      Coordinates buildingCoordinates) {
+    private Node makeEntryPointNodeFromBy( Coordinates buildingCoordinates) {
       float convexFraction;
       if (this.orientation == Defs.horizontal)
-        convexFraction = nodes.First().coordinates.getHorizontalConvexFraction(
-          buildingCoordinates, nodes.Last().coordinates); 
+        convexFraction = this.currentPathNodeList.First().coordinates.
+          getHorizontalConvexFraction( buildingCoordinates, this.
+          currentPathNodeList.Last().coordinates); 
       else    
-        convexFraction = nodes.First().coordinates.getVerticalConvexFraction(
-          buildingCoordinates, nodes.Last().coordinates);
-      Coordinates nodeCoordinates = nodes.First().coordinates.
-        makeConvexCombination( nodes.Last().coordinates, convexFraction);
+        convexFraction = this.currentPathNodeList.First().coordinates.
+          getVerticalConvexFraction( buildingCoordinates, this.
+          currentPathNodeList.Last().coordinates);
+      Coordinates nodeCoordinates = this.currentPathNodeList.First().
+        coordinates.makeConvexCombination( this.currentPathNodeList.Last().
+        coordinates, convexFraction);
       return Node.makeNodeInPathWithCoordinates( this, nodeCoordinates);
     }
 
-    public Node makePedestrianRightEntryPointOnSide( ushort streetSide, 
+    private void insertEntryPointOnCurrentPedestrianNodeList( Node entryPoint, 
+      int insertIndex) {
+      this.currentPathNodeList[insertIndex - 1].switchMutualNeighborsFromTo( 
+        this.currentPathNodeList[insertIndex], entryPoint);
+      Node.makeDoubleLinkBetween( entryPoint, 
+        this.currentPathNodeList[insertIndex]);
+      this.currentPathNodeList.Insert( insertIndex, entryPoint);
+    }
+
+    private void insertEntryPointOnCurrentVehicleNodeList( Node entryPoint, 
+      int insertIndex) {
+      this.currentPathNodeList[insertIndex - 1].switchNeighborFromTo( this.
+        currentPathNodeList[insertIndex], entryPoint);
+      Node.makeLinkFromTo( entryPoint, this.currentPathNodeList[insertIndex]);
+      this.currentPathNodeList.Insert( insertIndex, entryPoint);
+    }
+
+    private int getEntryPointInsertionIndex( Coordinates buildingCoordinates) {
+        List<Coordinates> pathNodesCoordinates = this.
+          currentPathNodeList.Select( node => node.coordinates).ToList();
+        int insertIndex = Coordinates.findConsecutivePointsForCovexCobinationOf(
+          pathNodesCoordinates, buildingCoordinates, this.orientation);
+      return insertIndex;
+    }
+
+    public Node makePedestrianEntryPointOnSideFor( ushort streetSide, 
       Coordinates buildingCoordinates) {
-        this.currentMasterNode = Node.pedestrianMasterNode;
-        Node entryPoint = this.makeEntryPointNodeFromBy( this.
-          rightSidePedestrianPathNodes, buildingCoordinates);
-        int afterNodeIdx = this.rightSidePedestrianPathNodes.FindIndex( 
-          node => node.coordinates.x > entryPoint.coordinates.x);
-        this.rightSidePedestrianPathNodes[afterNodeIdx - 1].
-          switchMutualNeighborsFromTo( this.rightSidePedestrianPathNodes[
-          afterNodeIdx], entryPoint);
-        Node.makeDoubleLinkBetween( entryPoint, this.
-          rightSidePedestrianPathNodes[afterNodeIdx]);
-        this.rightSidePedestrianPathNodes.Insert( afterNodeIdx, entryPoint);
+      this.currentMasterNode = Node.pedestrianMasterNode;
+      if (streetSide == Defs.right)
+        this.currentPathNodeList = this.rightSidePedestrianPathNodes; 
+      else 
+        this.currentPathNodeList = this.leftSidePedestrianPathNodes;
+      Node entryPoint = this.makeEntryPointNodeFromBy( buildingCoordinates);
+      int insertIndex = this.getEntryPointInsertionIndex( buildingCoordinates);
+      this.insertEntryPointOnCurrentPedestrianNodeList( entryPoint, 
+        insertIndex);
+      return entryPoint;
     }
-    public Node makeHorizontalEntryPointOnSide( ushort streetSide, 
-      float entryHeight) {
-      if (streetSide == Defs.right) {
-        this.currentMasterNode = Node.pedestrianMasterNode;
-        Node entryPoint = Node.makeNodeInPathWithCoordinates( this, 
-          new Coordinates( entryHeight, this.rightSidePedestrianPathNodes.
-          First().coordinates.y, 0));
-        int afterNodeIdx = this.rightSidePedestrianPathNodes.FindIndex( 
-          node => node.coordinates.x > entryHeight);
-        this.rightSidePedestrianPathNodes[afterNodeIdx - 1].
-          switchMutualNeighborsFromTo( this.rightSidePedestrianPathNodes[
-          afterNodeIdx], entryPoint);
-        Node.makeDoubleLinkBetween( entryPoint, this.
-          rightSidePedestrianPathNodes[afterNodeIdx]);
-        this.rightSidePedestrianPathNodes.Insert( afterNodeIdx, entryPoint);
 
-        this.currentMasterNode = Node.vehicleMasterNode;
-        Node entryPoint = Node.makeNodeInPathWithCoordinates( this, 
-          new Coordinates( entryHeight, this.rightSideVehiclePathNodes.
-          First().coordinates.y, 0));
-        int afterNodeIdx = this.rightSideVehiclePathNodes.FindIndex( 
-          node => node.coordinates.x > entryHeight);
-        this.rightSideVehiclePathNodes[afterNodeIdx - 1].
-          switchNeighborFromTo( this.rightSideVehiclePathNodes[
-          afterNodeIdx], entryPoint);
-        Node.makeLinkFromTo( entryPoint, this.
-          rightSideVehiclePathNodes[afterNodeIdx]);
-        this.rightSideVehiclePathNodes.Insert( afterNodeIdx, entryPoint);
-
-      }
-      else {
-        this.currentMasterNode = Node.pedestrianMasterNode;
-        Node entryPoint = Node.makeNodeInPathWithCoordinates( this, 
-          new Coordinates( entryHeight, this.leftSidePedestrianPathNodes.
-          First().coordinates.y, 0));
-        int afterNodeIdx = this.leftSidePedestrianPathNodes.FindIndex( 
-          node => node.coordinates.x < entryHeight);
-        this.leftSidePedestrianPathNodes[afterNodeIdx - 1].
-          switchMutualNeighborsFromTo( this.leftSidePedestrianPathNodes[
-          afterNodeIdx], entryPoint);
-        Node.makeDoubleLinkBetween( entryPoint, this.
-          leftSidePedestrianPathNodes[afterNodeIdx]);
-        this.leftSidePedestrianPathNodes.Insert( afterNodeIdx, entryPoint);
-
-        this.currentMasterNode = Node.vehicleMasterNode;
-        Node entryPoint = Node.makeNodeInPathWithCoordinates( this, 
-          new Coordinates( entryHeight, this.leftSideVehiclePathNodes.
-          First().coordinates.y, 0));
-        int afterNodeIdx = this.leftSideVehiclePathNodes.FindIndex( 
-          node => node.coordinates.x < entryHeight);
-        this.leftSideVehiclePathNodes[afterNodeIdx - 1].
-          switchNeighborFromTo( this.leftSideVehiclePathNodes[
-          afterNodeIdx], entryPoint);
-        Node.makeLinkFromTo( entryPoint, this.
-          leftSideVehiclePathNodes[afterNodeIdx]);
-        this.leftSideVehiclePathNodes.Insert( afterNodeIdx, entryPoint);
-      }
+    public Node makeVehicleEntryPointOnSideFor( ushort streetSide, 
+      Coordinates buildingCoordinates) {
+      this.currentMasterNode = Node.vehicleMasterNode;
+      if (streetSide == Defs.right)
+        this.currentPathNodeList = this.rightSideVehiclePathNodes; 
+      else 
+        this.currentPathNodeList = this.leftSideVehiclePathNodes;
+      Node entryPoint = this.makeEntryPointNodeFromBy( buildingCoordinates);
+      int insertIndex = this.getEntryPointInsertionIndex( buildingCoordinates);
+      this.insertEntryPointOnCurrentVehicleNodeList( entryPoint, 
+        insertIndex);
+      return entryPoint;
     }
-    
-    public Node makeVerticalEntryPointOnSide( ushort streetSide, float entryHeight) {
-      if (streetSide == Defs.right) {
-        this.currentMasterNode = Node.pedestrianMasterNode;
-        Node entryPoint = Node.makeNodeInPathWithCoordinates( this, 
-          new Coordinates( this.rightSidePedestrianPathNodes.
-          First().coordinates.x, entryHeight, 0));
-        int afterNodeIdx = this.rightSidePedestrianPathNodes.FindIndex( 
-          node => node.coordinates.y < entryHeight);
-        this.rightSidePedestrianPathNodes[afterNodeIdx - 1].
-          switchMutualNeighborsFromTo( this.rightSidePedestrianPathNodes[
-          afterNodeIdx], entryPoint);
-        Node.makeDoubleLinkBetween( entryPoint, this.
-          rightSidePedestrianPathNodes[afterNodeIdx]);
-        this.rightSidePedestrianPathNodes.Insert( afterNodeIdx, entryPoint);
-
-        this.currentMasterNode = Node.vehicleMasterNode;
-        Node entryPoint = Node.makeNodeInPathWithCoordinates( this, 
-          new Coordinates( this.rightSideVehiclePathNodes.
-          First().coordinates.x, entryHeight, 0));
-        int afterNodeIdx = this.rightSideVehiclePathNodes.FindIndex( 
-          node => node.coordinates.y < entryHeight);
-        this.rightSideVehiclePathNodes[afterNodeIdx - 1].
-          switchNeighborFromTo( this.rightSideVehiclePathNodes[
-          afterNodeIdx], entryPoint);
-        Node.makeLinkFromTo( entryPoint, this.
-          rightSideVehiclePathNodes[afterNodeIdx]);
-        this.rightSideVehiclePathNodes.Insert( afterNodeIdx, entryPoint);
-
-      }
-      else {
-        
-        this.currentMasterNode = Node.pedestrianMasterNode;
-        Node entryPoint = Node.makeNodeInPathWithCoordinates( this, 
-          new Coordinates( this.leftSidePedestrianPathNodes.
-          First().coordinates.x, entryHeight, 0));
-        int afterNodeIdx = this.leftSidePedestrianPathNodes.FindIndex( 
-          node => node.coordinates.y > entryHeight);
-        this.leftSidePedestrianPathNodes[afterNodeIdx - 1].
-          switchMutualNeighborsFromTo( this.leftSidePedestrianPathNodes[
-          afterNodeIdx], entryPoint);
-        Node.makeDoubleLinkBetween( entryPoint, this.
-          leftSidePedestrianPathNodes[afterNodeIdx]);
-        this.leftSidePedestrianPathNodes.Insert( afterNodeIdx, entryPoint);
-
-        this.currentMasterNode = Node.vehicleMasterNode;
-        Node entryPoint = Node.makeNodeInPathWithCoordinates( this, 
-          new Coordinates( this.leftSideVehiclePathNodes.
-          First().coordinates.x, entryHeight, 0));
-        int afterNodeIdx = this.leftSideVehiclePathNodes.FindIndex( 
-          node => node.coordinates.y > entryHeight);
-        this.leftSideVehiclePathNodes[afterNodeIdx - 1].
-          switchNeighborFromTo( this.leftSideVehiclePathNodes[
-          afterNodeIdx], entryPoint);
-        Node.makeLinkFromTo( entryPoint, this.
-          leftSideVehiclePathNodes[afterNodeIdx]);
-        this.leftSideVehiclePathNodes.Insert( afterNodeIdx, entryPoint);
-      }
-    }
-    public Node makeEntryPointOnSide( ushort streetSide, float entryHeight) {
-      if (this.orientation == Defs.horizontal) {
-      }
-      else {
-      }
-    } 
 
     public abstract Dictionary<string,string> dumpProperties(); 
 

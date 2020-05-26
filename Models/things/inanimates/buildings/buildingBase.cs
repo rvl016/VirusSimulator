@@ -24,12 +24,10 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.buildings {
     }
 
     public void makeEntryPointsOn( Street street, ushort streetSide) {
-      if (streetSide == Defs.right) {
-        if ()
-      }
-      else {
-
-      }     
+      this.sidewalkEntryPoint = street.
+        makePedestrianEntryPointOnSideFor( streetSide, this.coordinates);
+      this.streetEntryPoint = street.
+        makeVehicleEntryPointOnSideFor( streetSide, this.coordinates);
     }
   }
 }

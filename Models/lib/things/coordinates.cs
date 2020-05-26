@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using VirusSimulatorAvalonia.Models.defs;
 
 namespace VirusSimulatorAvalonia.Models.lib.things {
   public sealed class Coordinates {
@@ -30,6 +32,26 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       return new Coordinates( convexX, convexY, 0);
     }
 
+    public static int findConsecutivePointsForCovexCobinationOf( 
+      List<Coordinates> list, Coordinates ofPoint, ushort direction) {
+      for (int i = 0; i < list.Count - 1; i++) 
+        if (list[i].validateConvexFractionFromOn( list[i + 1], ofPoint, 
+          direction))
+          return i + 1;
+      throw new Exception( 
+        "New point is not a convex combination of any from the list!");
+    }
+
+    public bool validateConvexFractionFromOn( Coordinates that, 
+      Coordinates betweenPoint, ushort direction) {
+      float convexFraction;
+      if (direction == Defs.horizontal)
+        convexFraction = this.getHorizontalConvexFraction( betweenPoint, that);
+      else
+        convexFraction = this.getVerticalConvexFraction( betweenPoint, that);
+      return convexFraction >= .0f && convexFraction <= 1.0f;
+    }
+
     public float getVerticalConvexFraction( 
       Coordinates betweenPoint, Coordinates that) {
       return (betweenPoint.y - that.y) / (this.y - that.y);
@@ -39,6 +61,7 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       Coordinates betweenPoint, Coordinates that) {
       return (betweenPoint.x - that.x) / (this.x - that.x);
     }
+
 
   }
 }
