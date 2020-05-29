@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using VirusSimulatorAvalonia.Models.defs;
 using VirusSimulatorAvalonia.Models.things.inanimates.paths;
 using VirusSimulatorAvalonia.Models.things.inanimates.paths.corner;
@@ -51,8 +52,7 @@ namespace VirusSimulatorAvalonia.Models.lib.map {
     
     private void goThroughStreet( uint startX, uint startY, ushort direction, 
       Corner corner) {
-      uint x = startX;
-      uint y = startY;
+      uint x = startX, y = startY;
       int dx = direction == Defs.right ? 1 : (direction == Defs.left ? -1 : 0);
       int dy = direction == Defs.lower ? 1 : (direction == Defs.upper ? -1 : 0);
       uint streetLength = 0;
@@ -98,8 +98,7 @@ namespace VirusSimulatorAvalonia.Models.lib.map {
 
     private void setStreetOnPathMap( uint startX, uint startY, 
       ushort direction, uint length, Street street) {
-      uint x = startX;
-      uint y = startY;
+      uint x = startX, y = startY;
       int dx = direction == Defs.right ? 1 : (direction == Defs.left ? -1 : 0);
       int dy = direction == Defs.lower ? 1 : (direction == Defs.upper ? -1 : 0);
       while (length > 0) {
@@ -129,6 +128,6 @@ namespace VirusSimulatorAvalonia.Models.lib.map {
   }
 
   interface BuildingMapAlgorithm {
-    short[,] run( Path[,] pathMap);
+    Dictionary<Street,List<short[]>> run( Path[,] pathMap);
   }
 }

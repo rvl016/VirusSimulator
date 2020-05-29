@@ -15,6 +15,7 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.buildings {
 
     public Node streetEntryPoint;
     public Node sidewalkEntryPoint;
+    public Coordinates buildingDoorCoordinates;
     
     protected Building( float xCoordinate, float yCoordinate,
       float halfWidth, float halfHeight, ushort floorsNum) :

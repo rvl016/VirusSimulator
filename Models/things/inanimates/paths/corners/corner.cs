@@ -12,6 +12,7 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.corner {
 
     public List<Node> pedestrianNodes;
     public List<Node> vehicleNodes;
+    public override bool isMountable = false;
 
     public Corner( float xCoordinate, float yCoordinate, float halfWidth, Path path = null) : 
       base( xCoordinate, yCoordinate, halfWidth, 
@@ -22,23 +23,15 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.corner {
       this.makePathNodes();
     }
 
-    public override void connectToVehiclePathOnDirection( Path that, 
-      ushort direction) {
-      List<Node> thisNodes = this.getVehiclePathNodes( direction);
-      List<Node> thatNodes = that.getVehiclePathNodes( 
-        Defs.oppositeDirectionOf( direction));
-      thatNodes = thatNodes.OrderBy( node => thisNodes.First().coordinates.
-        getDistance( node.coordinates)).ToList();
-      // 0 neighbor implies that that street node is right handed
-      if (thatNodes.First().neighbors.Count() == 0) {
-        Node.makeLinkFromTo( thatNodes.First(), thisNodes.First()); 
-        Node.makeLinkFromTo( thisNodes.Last(), thatNodes.Last());
-      }
-      else {
-        Node.makeLinkFromTo( thisNodes.First(), thatNodes.First()); 
-        Node.makeLinkFromTo( thatNodes.Last(), thisNodes.Last());
-      }
-    } 
+    protected override void makePathNodes() {
+      this.currentMasterNode = Node.pedestrianMasterNode;
+      this.pedestrianNodes = this.makeNodeQuadrature( 
+        Node.makeDoubleLinkBetween, this.getSidewalkMiddleRelativeWidth());
+
+      this.currentMasterNode = Node.vehicleMasterNode;
+      this.vehicleNodes = this.makeNodeQuadrature( Node.makeLinkFromTo, 
+        this.getRoadMiddleRelativeWidth());
+    }
 
     private List<Node> makeNodeQuadrature( 
       Action<Node,Node> linkFunction, float relativeWidth) {
@@ -61,16 +54,24 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.corner {
       return new List<Node> { southeastNode, southwestNode, northwestNode, 
         northeastNode };
     }
-  
-    protected override void makePathNodes() {
-      this.currentMasterNode = Node.pedestrianMasterNode;
-      this.pedestrianNodes = this.makeNodeQuadrature( 
-        Node.makeDoubleLinkBetween, this.getSidewalkMiddleRelativeWidth());
 
-      this.currentMasterNode = Node.vehicleMasterNode;
-      this.vehicleNodes = this.makeNodeQuadrature( Node.makeLinkFromTo, 
-        this.getRoadMiddleRelativeWidth());
-    }
+    protected override void connectToVehiclePathOnDirection( Path that, 
+      ushort direction) {
+      List<Node> thisNodes = this.getVehiclePathNodes( direction);
+      List<Node> thatNodes = that.getVehiclePathNodes( 
+        Defs.oppositeDirectionOf( direction));
+      thatNodes = thatNodes.OrderBy( node => thisNodes.First().coordinates.
+        getDistance( node.coordinates)).ToList();
+      // 0 neighbor implies that that street node is right handed
+      if (thatNodes.First().neighbors.Count() == 0) {
+        Node.makeLinkFromTo( thatNodes.First(), thisNodes.First()); 
+        Node.makeLinkFromTo( thisNodes.Last(), thatNodes.Last());
+      }
+      else {
+        Node.makeLinkFromTo( thisNodes.First(), thatNodes.First()); 
+        Node.makeLinkFromTo( thatNodes.Last(), thisNodes.Last());
+      }
+    } 
 
     public abstract Dictionary<string,string> dumpProperties(); 
     protected abstract void iterateLifeCycle();

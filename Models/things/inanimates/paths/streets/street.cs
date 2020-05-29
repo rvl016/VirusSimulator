@@ -19,6 +19,8 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
     public List<Building> rightSideBuildings;
     public List<Building> leftSideBuildings;
 
+    public override bool isMountable = true;
+
     public Street( float xCoordinate, float yCoordinate, float halfWidth, 
       float halfHeight, ushort orientation, Path path = null) : 
       base( xCoordinate, yCoordinate, halfWidth, halfHeight) {
@@ -33,7 +35,66 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
       this.makePathNodes();
     }
 
-    public override void connectToVehiclePathOnDirection( Path that, 
+    protected override void makePathNodes() {
+      List<Node>[] nodesBySide;
+      this.currentMasterNode = Node.pedestrianMasterNode;
+      nodesBySide = this.makeNodeQuadrature( 
+        Node.makeDoubleLinkBetween, this.getSidewalkMiddleRelativeWidth());
+      this.rightSidePedestrianPathNodes = nodesBySide[0];
+      this.leftSidePedestrianPathNodes = nodesBySide[1];
+
+      this.currentMasterNode = Node.vehicleMasterNode;
+      nodesBySide = this.makeNodeQuadrature( Node.makeLinkFromTo, 
+        this.getRoadMiddleRelativeWidth());
+      this.rightSideVehiclePathNodes = nodesBySide[0];
+      this.leftSideVehiclePathNodes = nodesBySide[1];
+    }
+
+    // To be called by other path to make nodes links
+    public override List<Node> getPedestrianPathNodes( ushort direction) {
+      List<Node> allPedestrianNodes = this.rightSidePedestrianPathNodes.Concat( 
+        this.leftSidePedestrianPathNodes).ToList();
+      return this.filterNodesForDirection( allPedestrianNodes, direction);
+    }
+
+    public override List<Node> getVehiclePathNodes( ushort direction) {
+      List<Node> allVehicleNodes = this.rightSideVehiclePathNodes.Concat( 
+        this.leftSideVehiclePathNodes).ToList();
+      return this.filterNodesForDirection( allVehicleNodes, direction);
+    }
+
+    // For connecting buildings on streets
+    public Node makePedestrianEntryPointOnSideFor( ushort streetSide, 
+      Coordinates doorCoordinates) {
+      this.currentMasterNode = Node.pedestrianMasterNode;
+      if (streetSide == Defs.right)
+        this.currentPathNodeList = this.rightSidePedestrianPathNodes; 
+      else 
+        this.currentPathNodeList = this.leftSidePedestrianPathNodes;
+      Node entryPoint = this.makeEntryPointNodeFromBy( doorCoordinates);
+      int insertIndex = this.getEntryPointInsertionIndex( doorCoordinates);
+      this.insertEntryPointOnCurrentPedestrianNodeList( entryPoint, 
+        insertIndex);
+      return entryPoint;
+    }
+
+    public Node makeVehicleEntryPointOnSideFor( ushort streetSide, 
+      Coordinates doorCoordinates) {
+      this.currentMasterNode = Node.vehicleMasterNode;
+      if (streetSide == Defs.right)
+        this.currentPathNodeList = this.rightSideVehiclePathNodes; 
+      else 
+        this.currentPathNodeList = this.leftSideVehiclePathNodes;
+      Node entryPoint = this.makeEntryPointNodeFromBy( doorCoordinates);
+      int insertIndex = this.getEntryPointInsertionIndex( doorCoordinates);
+      this.insertEntryPointOnCurrentVehicleNodeList( entryPoint, 
+        insertIndex);
+      return entryPoint;
+    }
+
+    // For connecting Streets on corners, must be called before making 
+    //   buildings entry points!
+    protected override void connectToVehiclePathOnDirection( Path that, 
       ushort direction) {
       List<Node> thisNodes = this.getVehiclePathNodes( direction);
       List<Node> thatNodes = that.getVehiclePathNodes( 
@@ -51,8 +112,11 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
       }
     } 
 
+    // From here there are low level stuff for making path nodes //////////////
+
     // Returns array of (list of nodes): first elements are right nodes.
     private Func<Action<Node,Node>,float,List<Node>[]> makeNodeQuadrature;
+
     private List<Node>[] makeHorizontalNodeQuadrature( 
       Action<Node,Node> linkFunction, float relativeWidth) {
       Node northeastNode = Node.makeNodeInPathWithCoordinates( this, 
@@ -73,8 +137,8 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
         new List<Node> { northeastNode, northwestNode } };
     }
 
-    private List<Node>[] makeVerticalNodeQuadrature( Action<Node,Node> linkFunction, 
-      float relativeWidth) {
+    private List<Node>[] makeVerticalNodeQuadrature( 
+      Action<Node,Node> linkFunction, float relativeWidth) {
       Node northeastNode = Node.makeNodeInPathWithCoordinates( this, 
         this.coordinates.getRelativeCoordinates( relativeWidth, 
         -this.halfHeight));
@@ -93,33 +157,8 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
         new List<Node> { northwestNode, southeastNode } };
     }
 
-    protected override void makePathNodes() {
-      List<Node>[] nodesBySide;
-      this.currentMasterNode = Node.pedestrianMasterNode;
-      nodesBySide = this.makeNodeQuadrature( 
-        Node.makeDoubleLinkBetween, this.getSidewalkMiddleRelativeWidth());
-      this.rightSidePedestrianPathNodes = nodesBySide[0];
-      this.leftSidePedestrianPathNodes = nodesBySide[1];
-
-      this.currentMasterNode = Node.vehicleMasterNode;
-      nodesBySide = this.makeNodeQuadrature( Node.makeLinkFromTo, 
-        this.getRoadMiddleRelativeWidth());
-      this.rightSideVehiclePathNodes = nodesBySide[0];
-      this.leftSideVehiclePathNodes = nodesBySide[1];
-    }
-
-    public override List<Node> getPedestrianPathNodes( ushort direction) {
-      List<Node> allPedestrianNodes = this.rightSidePedestrianPathNodes.Concat( 
-        this.leftSidePedestrianPathNodes).ToList();
-      return this.filterNodesForDirection( allPedestrianNodes, direction);
-    }
-
-    public override List<Node> getVehiclePathNodes( ushort direction) {
-      List<Node> allVehicleNodes = this.rightSideVehiclePathNodes.Concat( 
-        this.leftSideVehiclePathNodes).ToList();
-      return this.filterNodesForDirection( allVehicleNodes, direction);
-    }
-
+    ///////////////////////////////////////////////////////////////////////////
+    
     private List<Node> filterNodesForDirection( List<Node> nodes, 
       ushort direction) {
       if (this.orientation == Defs.horizontal)
@@ -131,15 +170,15 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
         this.coordinates.y);
     }
 
-    private Node makeEntryPointNodeFromBy( Coordinates buildingCoordinates) {
+    private Node makeEntryPointNodeFromBy( Coordinates doorCoordinates) {
       float convexFraction;
       if (this.orientation == Defs.horizontal)
         convexFraction = this.currentPathNodeList.First().coordinates.
-          getHorizontalConvexFraction( buildingCoordinates, this.
+          getHorizontalConvexFraction( doorCoordinates, this.
           currentPathNodeList.Last().coordinates); 
       else    
         convexFraction = this.currentPathNodeList.First().coordinates.
-          getVerticalConvexFraction( buildingCoordinates, this.
+          getVerticalConvexFraction( doorCoordinates, this.
           currentPathNodeList.Last().coordinates);
       Coordinates nodeCoordinates = this.currentPathNodeList.First().
         coordinates.makeConvexCombination( this.currentPathNodeList.Last().
@@ -164,41 +203,14 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
       this.currentPathNodeList.Insert( insertIndex, entryPoint);
     }
 
-    private int getEntryPointInsertionIndex( Coordinates buildingCoordinates) {
+    private int getEntryPointInsertionIndex( Coordinates doorCoordinates) {
         List<Coordinates> pathNodesCoordinates = this.
           currentPathNodeList.Select( node => node.coordinates).ToList();
         int insertIndex = Coordinates.findConsecutivePointsForCovexCobinationOf(
-          pathNodesCoordinates, buildingCoordinates, this.orientation);
+          pathNodesCoordinates, doorCoordinates, this.orientation);
       return insertIndex;
     }
 
-    public Node makePedestrianEntryPointOnSideFor( ushort streetSide, 
-      Coordinates buildingCoordinates) {
-      this.currentMasterNode = Node.pedestrianMasterNode;
-      if (streetSide == Defs.right)
-        this.currentPathNodeList = this.rightSidePedestrianPathNodes; 
-      else 
-        this.currentPathNodeList = this.leftSidePedestrianPathNodes;
-      Node entryPoint = this.makeEntryPointNodeFromBy( buildingCoordinates);
-      int insertIndex = this.getEntryPointInsertionIndex( buildingCoordinates);
-      this.insertEntryPointOnCurrentPedestrianNodeList( entryPoint, 
-        insertIndex);
-      return entryPoint;
-    }
-
-    public Node makeVehicleEntryPointOnSideFor( ushort streetSide, 
-      Coordinates buildingCoordinates) {
-      this.currentMasterNode = Node.vehicleMasterNode;
-      if (streetSide == Defs.right)
-        this.currentPathNodeList = this.rightSideVehiclePathNodes; 
-      else 
-        this.currentPathNodeList = this.leftSideVehiclePathNodes;
-      Node entryPoint = this.makeEntryPointNodeFromBy( buildingCoordinates);
-      int insertIndex = this.getEntryPointInsertionIndex( buildingCoordinates);
-      this.insertEntryPointOnCurrentVehicleNodeList( entryPoint, 
-        insertIndex);
-      return entryPoint;
-    }
 
     public abstract Dictionary<string,string> dumpProperties(); 
 

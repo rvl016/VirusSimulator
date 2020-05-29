@@ -14,6 +14,7 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths {
     }
     public Dictionary<uint,Vehicle> vehicles;
     public Dictionary<uint,Person> people;
+    public abstract bool isMountable;
     
     protected Path( float xCoordinate, float yCoordinate, float halfWidth, 
       float halfHeight) :
@@ -28,10 +29,15 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths {
 
     public abstract List<Node> getVehiclePathNodes( ushort direction);
     
-    public abstract void connectToVehiclePathOnDirection( Path that, 
+    protected abstract void connectToVehiclePathOnDirection( Path that, 
       ushort direction);
 
-    public void connectToPedestrianPathOnDirection( Path that, 
+    public void connectToPathOnDirection( Path that, ushort direction) {
+      this.connectToPedestrianPathOnDirection( that, direction);
+      this.connectToVehiclePathOnDirection( that, direction);
+    }
+
+    protected void connectToPedestrianPathOnDirection( Path that, 
       ushort direction) {
       List<Node> thisNodes = this.getPedestrianPathNodes( direction);
       List<Node> thatNodes = that.getPedestrianPathNodes( 
@@ -42,10 +48,6 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths {
       Node.makeDoubleLinkBetween( thisNodes.Last(), thatNodes.Last()); 
     }
 
-    public void connectToPathOnDirection( Path that, ushort direction) {
-      this.connectToPedestrianPathOnDirection( that, direction);
-      this.connectToVehiclePathOnDirection( that, direction);
-    }
 
     public override void makeEndPointOn( Path endpoint) {
       this.endPoints.Add( endpoint);
@@ -94,6 +96,6 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths {
       return this.vehicles.Select( vehicleEntry => vehicleEntry.Value).ToList();
     }
 
-    // /////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
   }
 }
