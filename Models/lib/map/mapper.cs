@@ -1,15 +1,25 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
+using Troschuetz.Random;
 using VirusSimulatorAvalonia.Models.defs;
+using VirusSimulatorAvalonia.Models.lib.common;
+using VirusSimulatorAvalonia.Models.lib.map.streetAlgorithms;
+using VirusSimulatorAvalonia.Models.lib.map.buildingAlgorithms;
 using VirusSimulatorAvalonia.Models.things.inanimates.paths;
 using VirusSimulatorAvalonia.Models.things.inanimates.paths.corner;
 using VirusSimulatorAvalonia.Models.things.inanimates.paths.street;
 
 namespace VirusSimulatorAvalonia.Models.lib.map {
   sealed class Mapper {
+
+    static readonly uint minSpaceBetweenStreets = 3;
+    static TRandom random = new TRandom();
     private short[,] map;
     private Path[,] pathMap;
     private StreetMapAlgorithm mapAlgorithm;
+    private BuildingMapAlgorithm buildingsAlgorithm;
+    private Dictionary<Street,List<uint[][]>> street2Buildings;
 
     public void sketchEmptyMap( int width, int height) {
       this.map = new short[height, width];
@@ -21,14 +31,29 @@ namespace VirusSimulatorAvalonia.Models.lib.map {
       Array.Clear( this.pathMap, 0, this.pathMap.Length);
     }
     
+    public void makeInanimateWorld( int width, int height) {
+      sketchEmptyMap( width, height);
+      makeMapBluePrint<RecursiveDivision>( minSpaceBetweenStreets, 
+        width, height);
+      buildStreetsAndCrosses();
+      makeBuildingsBluePrint<BuildingAlgorithm>();
+      buildBuildings();
+    }
+
     public void makeMapBluePrint<StreetMapAlgorithmImplementation>( 
-      uint minSpaceBetweenStreets, int height, int width) 
+      uint minSpaceBetweenStreets, int width, int height) 
       where StreetMapAlgorithmImplementation : StreetMapAlgorithm, new() {
       this.mapAlgorithm = new StreetMapAlgorithmImplementation();
-      this.sketchEmptyMap( height, width);
+      this.sketchEmptyMap( width, height);
       this.map = this.mapAlgorithm.run( this.map, minSpaceBetweenStreets);
     } 
 
+    public void makeBuildingsBluePrint<BuildingMapAlgorithmImplementation>()
+      where BuildingMapAlgorithmImplementation : BuildingMapAlgorithm, 
+      new() {
+      this.buildingsAlgorithm = new BuildingMapAlgorithmImplementation();
+      this.street2Buildings = this.buildingsAlgorithm.run( this.pathMap);
+    }
 
     public void buildStreetsAndCrosses() {
       uint xInit = getFirstCrossOnUpperXAxis();
@@ -39,23 +64,42 @@ namespace VirusSimulatorAvalonia.Models.lib.map {
       goThroughDirectionsFromCorner( xInit, 0, newCorner);
     }
 
-    private void goThroughDirectionsFromCorner( uint x, uint y, Corner corner) {
-      if (this.map[y,x + 1] > 0)
+    public void buildBuildings() {
+      this.street2Buildings.ToList().ForEach( pair => {
+        Street street = pair.Key;
+        pair.Value.ForEach( buildingCoordinates => 
+          makeBuildingWithAt( buildingCoordinates, street)
+        );
+      });
+    }
+
+    private void makeBuildingWithAt( uint[][] coordinates, Street street) {
+      uint[] startCoordinates = coordinates[0];
+      uint[] endCoordinates = coordinates[1];
+      uint[] doorCoordinates = coordinates[2];
+      uint area = (endCoordinates[0] - startCoordinates[0]) * 
+        (endCoordinates[1] - endCoordinates[1]);
+      ushort floorsNumber = getRandomBuildingFloorNumber( area);
+      
+    }
+
+    private void goThroughDirectionsFromCorner( uint x, uint y, 
+      Corner corner) {
+      if (x < this.map.GetUpperBound( 1) && this.map[y,x + 1] > 0)
         this.goThroughStreet( x + 1, y, Defs.right, corner);
-      if (this.map[y,x + 1] > 0)
+      if (y < this.map.GetUpperBound( 0) && this.map[y + 1,x] > 0)
         this.goThroughStreet( x, y + 1, Defs.lower, corner);
-      if (this.map[y,x - 1] > 0)
+      if (x > 0 && this.map[y,x - 1] > 0)
         this.goThroughStreet( x - 1, y, Defs.left, corner);
-      if (this.map[y - 1,x] > 0)
+      if (y > 0 && this.map[y - 1,x] > 0)
         this.goThroughStreet( x, y - 1, Defs.upper, corner);
     }
     
     private void goThroughStreet( uint startX, uint startY, ushort direction, 
       Corner corner) {
-      uint x = startX, y = startY;
-      int dx = direction == Defs.right ? 1 : (direction == Defs.left ? -1 : 0);
-      int dy = direction == Defs.lower ? 1 : (direction == Defs.upper ? -1 : 0);
-      uint streetLength = 0;
+      int dx = Common.getDxOfDirection( direction);
+      int dy = Common.getDyOfDirection( direction);
+      uint streetLength = 0, x = startX, y = startY;
       while (this.map[y,x] == 1) {
         streetLength++;
         this.map[y,x] = -1;
@@ -117,6 +161,11 @@ namespace VirusSimulatorAvalonia.Models.lib.map {
         "Map blueprint doesn't have street marker on first line.");
     }
 
+    private ushort getRandomBuildingFloorNumber( uint buildingArea) {
+      return (ushort) (1 + random.Gamma( (double) buildingArea / 4.0d, 
+        4.0d / (double) buildingArea));
+    }
+
   }
 
 // Any implementation must NOT generate directly adjacent street corners! 
@@ -128,6 +177,6 @@ namespace VirusSimulatorAvalonia.Models.lib.map {
   }
 
   interface BuildingMapAlgorithm {
-    Dictionary<Street,List<short[]>> run( Path[,] pathMap);
+    Dictionary<Street,List<uint[][]>> run( Path[,] pathMap);
   }
 }

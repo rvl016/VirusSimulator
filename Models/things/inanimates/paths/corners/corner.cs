@@ -14,7 +14,8 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.corner {
     public List<Node> vehicleNodes;
     public override bool isMountable = false;
 
-    public Corner( float xCoordinate, float yCoordinate, float halfWidth, Path path = null) : 
+    public Corner( float xCoordinate, float yCoordinate, float halfWidth,
+      Path path = null) : 
       base( xCoordinate, yCoordinate, halfWidth, 
       halfWidth) {
       ThingsPackage.add( this);

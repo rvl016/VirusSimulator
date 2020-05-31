@@ -2,7 +2,7 @@ using Troschuetz.Random;
 using VirusSimulatorAvalonia.Models.lib.map;
 using VirusSimulatorAvalonia.Models.defs;
 
-namespace VirusSimulatorAvalonia.Models.lib.map.steetAlgorithms {
+namespace VirusSimulatorAvalonia.Models.lib.map.streetAlgorithms {
 
   public sealed class RecursiveDivision : StreetMapAlgorithm {
     

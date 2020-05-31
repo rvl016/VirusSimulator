@@ -24,11 +24,17 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.buildings {
       this.effectiveArea = 4.0f * halfHeight * halfHeight * floorsNum;
     }
 
-    public void makeEntryPointsOn( Street street, ushort streetSide) {
-      this.sidewalkEntryPoint = street.
-        makePedestrianEntryPointOnSideFor( streetSide, this.coordinates);
-      this.streetEntryPoint = street.
-        makeVehicleEntryPointOnSideFor( streetSide, this.coordinates);
+    public void setDoorCoordinates( float xCoordinate, float yCoordinate) {
+      this.buildingDoorCoordinates = new Coordinates( xCoordinate, 
+        yCoordinate, 0);    
     }
+    
+    public void makeEntryPointsOn( Street street, ushort streetSide) {
+      this.sidewalkEntryPoint = street.makePedestrianEntryPointOnSideFor( 
+        streetSide, this.buildingDoorCoordinates);
+      this.streetEntryPoint = street.makeVehicleEntryPointOnSideFor( 
+        streetSide, this.buildingDoorCoordinates);
+    }
+
   }
 }

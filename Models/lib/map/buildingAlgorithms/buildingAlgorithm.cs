@@ -12,13 +12,18 @@ namespace VirusSimulatorAvalonia.Models.lib.map.buildingAlgorithms {
   public sealed class BuildingAlgorithm : BuildingMapAlgorithm {
     
     static TRandom random = new TRandom();
-    static uint minBuildingLength = 2;
+    static readonly uint minBuildingLength = 2;
     private Path[,] pathMap;
-    private Dictionary<Street,List<uint[]>> map;
+    private Dictionary<Street,List<uint[][]>> map;
     private bool[,] occupiedTerrain;
+    private uint[] buildingNorthwestCoords = new uint[2];
+    private uint[] buildingSoutheastCoords = new uint[2];
+    private uint[] buildingDoorCoords = new uint[2];
+    private uint buildingHeight;
+    private uint buildingWidth;
 
-    public Dictionary<Street,List<uint[]>> run( Path[,] pathMap) {
-      this.map = new Dictionary<Street,List<uint[]>>();
+    public Dictionary<Street,List<uint[][]>> run( Path[,] pathMap) {
+      this.map = new Dictionary<Street,List<uint[][]>>();
       this.occupiedTerrain = new bool[pathMap.GetLength( 0),
         pathMap.GetLength( 1)];
       this.pathMap = pathMap;
@@ -58,133 +63,192 @@ namespace VirusSimulatorAvalonia.Models.lib.map.buildingAlgorithms {
         endX++;
       return endX;
     }
+    
     void buildOnTerrain( uint startX, uint startY, uint endX, uint endY) {
       if (this.pathMap[startY,Math.Min( endX + 1, 
-        pathMap.GetLength( 1))] != null)
-        buildFromEastStreet( startY, endY, startX, endX - startX + 1);
-      if (this.pathMap[Math.Min( endY + 1, this.pathMap.GetLength( 0)), 
+        pathMap.GetUpperBound( 1))] != null)
+        buildFacadeAtWith( endX, startY, Defs.right);
+      if (this.pathMap[Math.Min( endY + 1, this.pathMap.GetUpperBound( 0)), 
         endX] != null)
-        buildFromSouthStreet( startY, endY, endX, endY - startY + 1);
+        buildFacadeAtWith( endX, endY, Defs.down);
+      if (this.pathMap[endY,Math.Max( 0, startX - 1)] != null)
+        buildFacadeAtWith( endX, endY, Defs.left);
+      if (this.pathMap[Math.Max( 0, startY - 1),startX] != null)
+        buildFacadeAtWith( startX, startY, Defs.up);
     }
 
-    void buildFromSouthStreet( uint startX, uint endX, uint y, uint yLength) {
-      while (endX - startX > minBuildingLength) {
-        uint[] buildingDimensions = randomBuildingDimensions( yLength, 
-          endY - startY + 1);
-        uint[] buildingCoordinates = getBuildingCoordinates( x, startY, 
-          (int) -buildingDimensions[0], (int) buildingDimensions[1]);
-        Street street = findStreetForBuilding( buildingCoordinates, x + 1, 
-          startY, buildingDimensions[1], Defs.lower);
-        addBuildingToList( street, buildingCoordinates);
-        fillOccupiedTerrain( buildingCoordinates);
-        endX -= buildingDimensions[1];
+    void buildFacadeAtWith( uint x, uint y, ushort direction) {
+      int dx = getNextClockwiseDxOf( direction);
+      int dy = getNextClockwiseDyOf( direction);
+      uint[] maxDimensions;
+      do {
+        maxDimensions = getMaxDimensionsFrom( x, y, direction);
+        if (maxDimensions[0] >= minBuildingLength && 
+          maxDimensions[1] >= minBuildingLength) {
+          setBuildingIn( x, y, maxDimensions[0], maxDimensions[1], direction);
+          x = x + (uint) (maxDimensions[0]); 
+          y = y + (uint) (maxDimensions[0]); 
+        }
+        else {
+          x = (uint) (x + dx);
+          y = (uint) (y + dy);
+        }
+      } while (maxDimensions[0] >= minBuildingLength);
+    }
+
+    private void setBuildingIn( uint x, uint y, uint parallelLen, 
+      uint perpendicularLen, ushort direction) {
+      generateBuildingWith( x, y, parallelLen, perpendicularLen, direction);
+      Street street = getStreetForBuildingOrDieFrom( x, y, direction);
+      addBuildingToListAt( street);
+      fillOccupiedTerrain();
+    }
+
+    private void generateBuildingWith( uint x, uint y, 
+      uint parallelLength, uint perpendicularLength, ushort direction) {
+      if (direction == Defs.left || direction == Defs.right)
+        generateRandomBuildingDimensions( perpendicularLength, parallelLength);
+      else
+        generateRandomBuildingDimensions( parallelLength, perpendicularLength);
+      int dx = direction == Defs.right || direction == Defs.down ? -1 : 1;
+      int dy = direction == Defs.left || direction == Defs.down ? -1 : 1;
+      generateBuildingCoordinatesFromWith( x, y, dx, dy);
+    }
+
+    private Street getStreetForBuildingOrDieFrom( uint x, uint y, 
+      ushort direction) {
+      uint length;
+      ushort streetDirection;
+      if (direction == Defs.down || direction == Defs.up) {
+        length = this.buildingWidth;
+        streetDirection = direction == Defs.down ? Defs.left : Defs.right;
       }
-    }
-
-    void buildFromEastStreet( uint startY, uint endY, uint x, uint xLength) {
-      while (endY - startY > minBuildingLength) {
-        uint[] buildingDimensions = randomBuildingDimensions( xLength, 
-          endY - startY + 1);
-        uint[] buildingCoordinates = getBuildingCoordinates( x, startY, 
-          (int) -buildingDimensions[0], (int) buildingDimensions[1]);
-        Street street = findStreetForBuilding( buildingCoordinates, x + 1, 
-          startY, buildingDimensions[1], Defs.lower);
-        addBuildingToList( street, buildingCoordinates);
-        fillOccupiedTerrain( buildingCoordinates);
-        startY += buildingDimensions[1];
+      else {
+        length = this.buildingHeight;
+        streetDirection = direction == Defs.left ? Defs.up : Defs.down;
       }
+      Street street = findStreetForBuilding( x, y, length, streetDirection);
+      if (street == null)
+        throw new Exception( "There is no street for the building!");
+      return street;
     }
 
+    // this is will return the lengths with respect of street orientation!
+    private uint[] getMaxDimensionsFrom( uint x, uint y, ushort direction) {
+      int perpendicularDx = getOppositeDxOf( direction);
+      int perpendicularDy = getOppositeDyOf( direction);
+      uint perpendicularLength = getLengthFrom( x, y, perpendicularDx, 
+        perpendicularDy);
+      x = (uint) (x + (perpendicularLength - 1) * perpendicularDx);
+      y = (uint) (y + (perpendicularLength - 1) * perpendicularDx);
+      int parallelDx = getNextClockwiseDxOf( direction);
+      int parallelDy = getNextClockwiseDyOf( direction);
+      uint parallelLength = 0, totalParallelLength = 0;
+      while (totalParallelLength < minBuildingLength) {
+        parallelLength = getLengthFrom( x, y, parallelDx, parallelDy);
+        x = (uint) (x + parallelLength * parallelDx);
+        y = (uint) (y + parallelLength * parallelDx);
+        totalParallelLength += parallelLength;
+        if (totalParallelLength >= minBuildingLength) break;
+        x = (uint) (x - perpendicularDx);
+        y = (uint) (y - perpendicularDx);
+        perpendicularLength--;
+      }
+      return new uint[2] { totalParallelLength, perpendicularLength };
+    }
 
-    Street findStreetForBuilding( uint[] buildingCoordinates, uint startX, 
-      uint startY, uint length, ushort direction) {
+    uint getLengthFrom( uint x, uint y, int dx, int dy) {
+      uint length = 0;
+      while (isMapCoordinatesFree( x, y)) {
+        x = (uint) (x + dx);
+        y = (uint) (y + dy);
+        length++;
+      }
+      return length;
+    }
+
+    Street findStreetForBuilding( uint startX, uint startY, uint length,
+      ushort streetDirection) {
       Dictionary<char,int> streetCoords = getStreetCoordsForBuilding( startX,
-        startY, length, direction);
+        startY, length, streetDirection);
       uint x = (uint) streetCoords.GetValueOrDefault( 'x');
       uint y = (uint) streetCoords.GetValueOrDefault( 'y');
-      buildingCoordinates[4] = x;
-      buildingCoordinates[5] = y;
+      this.buildingDoorCoords[0] = x;
+      this.buildingDoorCoords[1] = y;
       return (Street) this.pathMap[y,x];
     }
 
-    void addBuildingToList( Street street, uint[] coordinates) {
+    void addBuildingToListAt( Street street) {
+      uint[][] coordinates = new uint[][] { this.buildingNorthwestCoords,
+        this.buildingSoutheastCoords, this.buildingDoorCoords }; 
       if (this.map.GetValueOrDefault( street) == null) 
-        this.map.Add( street, new List<uint[]>() { coordinates });
+        this.map.Add( street, new List<uint[][]>() { coordinates });
       else {
-        List<uint[]> coordinatesList = this.map.GetValueOrDefault( street);
+        List<uint[][]> coordinatesList = this.map.GetValueOrDefault( street);
         coordinatesList.Add( coordinates);
       }
     }
 
-    Dictionary<char,int> getStreetCoordsForBuilding( uint startX, uint startY,
-      uint length, ushort direction) {
-      Dictionary<char,int> delta = Common.directionIterable.
-        GetValueOrDefault( direction);
-      int middleX = (int) startX + (int) length / 2 * delta.
-        GetValueOrDefault( 'x');
-      int middleY = (int) startY + (int) length / 2 * delta.
-        GetValueOrDefault( 'y');
+    private Dictionary<char,int> getStreetCoordsForBuilding( uint startX,
+      uint startY, uint length, ushort streetDirection) {
+      int middleX = (int) startX + (int) length / 2 * Common.
+        getDxOfDirection( streetDirection);
+      int middleY = (int) startY + (int) length / 2 * Common.
+        getDyOfDirection( streetDirection);
       int plusSideX = middleX, plusSideY = middleY;
       int minusSideX = middleX, minusSideY = middleY;
       if (length % 2 == 0) {
-        minusSideX -= delta.GetValueOrDefault( 'x');
-        minusSideY -= delta.GetValueOrDefault( 'y');
+        minusSideX -= Common.getDxOfDirection( streetDirection);
+        minusSideY -= Common.getDyOfDirection( streetDirection);
       }
       return bidirectionalStreetSearch( plusSideX, plusSideY, middleX,
-        middleY, delta, length / 2);
+        middleY, length / 2, streetDirection);
     }
 
     // This is a way I find to get buildings entry points next to 
     //   building center
-    Dictionary<char,int> bidirectionalStreetSearch( int plusSideX, int plusSideY, int minusSideX, int minusSideY, Dictionary<char,int> delta, uint length) {
+    private Dictionary<char,int> bidirectionalStreetSearch( int plusSideX,
+      int plusSideY, int minusSideX, int minusSideY, uint length, 
+      ushort direction) {
       for (uint i = length; i > 0; i--) {
-        if (this.pathMap[plusSideX,plusSideY].isMountable) 
+        if (this.pathMap[plusSideY,plusSideX].isMountable) 
           return new Dictionary<char,int> { { 'x', plusSideX }, 
             { 'y', plusSideY } };
-        if (this.pathMap[minusSideX,minusSideY].isMountable) 
+        if (this.pathMap[minusSideY,minusSideX].isMountable) 
           return new Dictionary<char,int> { { 'x', minusSideX }, 
             { 'y', minusSideY } };
-        plusSideX += delta.GetValueOrDefault( 'x');
-        plusSideY += delta.GetValueOrDefault( 'y');
-        minusSideX -= delta.GetValueOrDefault( 'x');
-        minusSideY -= delta.GetValueOrDefault( 'y');
+        plusSideX += Common.getDxOfDirection( direction);
+        plusSideY += Common.getDyOfDirection( direction);
+        minusSideX -= Common.getDxOfDirection( direction);
+        minusSideY -= Common.getDyOfDirection( direction);
       }
       return null;
     }
 
-    void fillOccupiedTerrain( uint[] buildingCoordinates) {
-      for (uint x = buildingCoordinates[0]; x < buildingCoordinates[2]; x++) 
-        for (uint y = buildingCoordinates[1]; y < buildingCoordinates[3]; y++) 
+    private void fillOccupiedTerrain() {
+      uint minX = this.buildingNorthwestCoords[0];
+      uint minY = this.buildingNorthwestCoords[1];
+      uint maxX = this.buildingSoutheastCoords[0];
+      uint maxY = this.buildingSoutheastCoords[1];
+      for (uint x = minX; x < maxY; x++) 
+        for (uint y = minY; y < maxY; y++) 
           this.occupiedTerrain[y,x] = true;
     }
 
-    uint[] getBuildingCoordinates( uint startX, uint startY, int deltaX, 
-      int deltaY) {
-      uint[] coordinates = new uint[6];
-      coordinates[0] = deltaX < 0 ? (uint) (startX + deltaX) : startX;
-      coordinates[1] = deltaY < 0 ? (uint) (startY + deltaY) : startY;
-      coordinates[2] = deltaX < 0 ? startX : (uint) (startX + deltaX);
-      coordinates[3] = deltaY < 0 ? startY : (uint) (startY + deltaY);
-      return coordinates;
+    private void generateBuildingCoordinatesFromWith( uint x, uint y, 
+      int dx, int dy) {
+      this.buildingNorthwestCoords[0] = dx < 0 ? (uint) (x + 
+        dx * this.buildingWidth) : x;
+      this.buildingNorthwestCoords[1] = dy < 0 ? (uint) (y + 
+        dy) * this.buildingHeight : y;
+      this.buildingSoutheastCoords[0] = dx < 0 ? x : (uint) (x +
+        dx * this.buildingWidth);
+      this.buildingSoutheastCoords[1] = dy < 0 ? y : (uint) (y +
+        dy * this.buildingHeight);
     }
 
-
-    private List<Street> getStreetsAround( uint startX, uint startY, uint endX, 
-      uint endY) {
-      List<Street> streetsAround = new List<Street>;
-      if (startY != 0 && pathMap[startY - 1,(startX + endX / 2)] != null)
-        streetsAround.Add( (Street) pathMap[startY - 1,(startX + endX / 2)]);
-      if (startY != 0 && pathMap[startY - 1,(startX + endX / 2)] != null)
-        streetsAround.Add( (Street) pathMap[startY - 1,(startX + endX / 2)]);
-      if (startY != 0 && pathMap[startY - 1,(startX + endX / 2)] != null)
-        streetsAround.Add( (Street) pathMap[startY - 1,(startX + endX / 2)]);
-      if (startY != 0 && pathMap[startY - 1,(startX + endX / 2)] != null)
-        streetsAround.Add( (Street) pathMap[startY - 1,(startX + endX / 2)]);
-      return streetsAround;
-    }
-
-    static private uint[] randomBuildingDimensions( uint maxWidth, 
-      uint maxHeight) {
+    private void generateRandomBuildingDimensions( 
+      uint maxWidth, uint maxHeight) {
       uint height = 0, width = 0;
       height = Math.Max( minBuildingLength, Math.Min( (uint) Math.Ceiling( 
         random.Beta( 2.5d, 4.0d) * maxHeight), maxHeight - minBuildingLength));
@@ -192,11 +256,36 @@ namespace VirusSimulatorAvalonia.Models.lib.map.buildingAlgorithms {
       width = Math.Max( minBuildingLength, Math.Min( (uint) Math.Ceiling( 
         random.Beta( 6.0d, 6.0d * scaling) * maxWidth), maxWidth - 
         minBuildingLength));
-      return new uint[2] { width, height };
+      this.buildingWidth = width;
+      this.buildingHeight = height;
     }
 
-    private uint clipToLimits( uint value, uint start, uint end) {
-      return Math.Max( Math.Min( value, end), start);
+    private bool isMapCoordinatesFree( uint x, uint y) {
+      return isInBounds( x, y) && ! this.occupiedTerrain[y,x] && 
+        this.pathMap[y,x] == null;
+    }
+
+    private bool isInBounds( uint x, uint y) {
+      return x >= 0 && y >= 0 && y < this.pathMap.GetLength( 0) && 
+        x < this.pathMap.GetLength( 1);
+    }
+
+    int getNextClockwiseDxOf( ushort direction) {
+      return Common.getDxOfDirection( Common.getNextClockwiseDirection( 
+        direction));
+    }
+
+    int getNextClockwiseDyOf( ushort direction) {
+      return Common.getDyOfDirection( Common.getNextClockwiseDirection( 
+        direction));
+    }
+
+    int getOppositeDxOf( ushort direction) {
+      return Common.getDxOfDirection( Common.getOppositeDirection( direction));
+    }
+
+    int getOppositeDyOf( ushort direction) {
+      return Common.getDyOfDirection( Common.getOppositeDirection( direction));
     }
   } 
 }

@@ -1,6 +1,26 @@
 namespace VirusSimulatorAvalonia.Models.hidden.god {
 
   public static class God {
+
+    public static ulong timeSinceEpoch = 0;
+    public static uint worldPopulation = 0;
+    public static uint numberOfInfected = 0;
+    public static uint numberOfImmune = 0;
+    public static uint deaths = 0;
+
+    public static void generateWorld() {
+
+    }
+     
+    public static void generateThings() {
+
+    }
+
+    public static void destroyWorld() {
+
+    }
+
+    
     // It must hold all parameters of the universe and all universe 
     //   rely on then, with except of the dictator, that is above 
     //   god's concern. (He actually may define god's universal parameters)
