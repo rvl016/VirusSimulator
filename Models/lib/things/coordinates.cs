@@ -62,6 +62,10 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       return (betweenPoint.x - that.x) / (this.x - that.x);
     }
 
-
+    public ushort getRelativeSideOnAxisTo( ushort axis, Coordinates that) {
+      if (axis == Defs.horizontal ? this.y > that.y : this.x > that.x)
+        return Defs.left;
+      return Defs.right;
+    }
   }
 }

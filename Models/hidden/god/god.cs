@@ -1,8 +1,10 @@
+using VirusSimulatorAvalonia.Models.defs;
+
 namespace VirusSimulatorAvalonia.Models.hidden.god {
 
   public static class God {
 
-    public static ulong timeSinceEpoch = 0;
+    public static ulong secondsSinceEpoch = 0;
     public static uint worldPopulation = 0;
     public static uint numberOfInfected = 0;
     public static uint numberOfImmune = 0;
@@ -18,6 +20,10 @@ namespace VirusSimulatorAvalonia.Models.hidden.god {
 
     public static void destroyWorld() {
 
+    }
+
+    public static uint getCurrentTime() {
+      return (uint) (secondsSinceEpoch / Consts.aDayInSeconds);
     }
 
     

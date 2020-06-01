@@ -6,6 +6,10 @@ using VirusSimulatorAvalonia.Models.defs;
 using VirusSimulatorAvalonia.Models.lib.common;
 using VirusSimulatorAvalonia.Models.lib.map.streetAlgorithms;
 using VirusSimulatorAvalonia.Models.lib.map.buildingAlgorithms;
+using VirusSimulatorAvalonia.Models.things.inanimates.buildings;
+using VirusSimulatorAvalonia.Models.things.inanimates.buildings.residence;
+using VirusSimulatorAvalonia.Models.things.inanimates.buildings.commerce;
+using VirusSimulatorAvalonia.Models.things.inanimates.buildings.quarentine;
 using VirusSimulatorAvalonia.Models.things.inanimates.paths;
 using VirusSimulatorAvalonia.Models.things.inanimates.paths.corner;
 using VirusSimulatorAvalonia.Models.things.inanimates.paths.street;
@@ -64,23 +68,81 @@ namespace VirusSimulatorAvalonia.Models.lib.map {
       goThroughDirectionsFromCorner( xInit, 0, newCorner);
     }
 
+    // I don't know what to do to improve these if/else... =(
     public void buildBuildings() {
-      this.street2Buildings.ToList().ForEach( pair => {
-        Street street = pair.Key;
-        pair.Value.ForEach( buildingCoordinates => 
-          makeBuildingWithAt( buildingCoordinates, street)
-        );
-      });
+      List<Tuple<Street,uint[][]>> buildingOrders = 
+        getRandomizedBuildingsOrders();
+      Building building;
+      for (int i = 0; i < buildingOrders.Count; i++) {
+        if (i / buildingOrders.Count < Consts.residenceProportion)
+          building = makeResidenceWithAt( buildingOrders[i].Item2);
+        else if (i / buildingOrders.Count < Consts.residenceProportion + 
+          Consts.commerceProportion)
+          building = makeCommerceWithAt( buildingOrders[i].Item2);
+        else 
+          building = makeQuarentineWithAt( buildingOrders[i].Item2);
+        placeBuildingOnStreet( building, buildingOrders[i].Item1, 
+          buildingOrders[i].Item2[2]);
+      }
     }
 
-    private void makeBuildingWithAt( uint[][] coordinates, Street street) {
-      uint[] startCoordinates = coordinates[0];
-      uint[] endCoordinates = coordinates[1];
+    private List<Tuple<Street,uint[][]>> getRandomizedBuildingsOrders() {
+      List<Tuple<Street,uint[][]>> buildingList = this.street2Buildings.
+        ToList().SelectMany( pair => {
+          Street street = pair.Key;
+          return pair.Value.Select( buildingCoordinates => 
+            new Tuple<Street,uint[][]> ( street, buildingCoordinates )
+        );
+      }).ToList();
+      return buildingList.Select( pair => new { value = pair, 
+        rand = random.ContinuousUniform( 0, 1) }).OrderBy( pair => pair.rand).
+        Select( pair => pair.value).ToList();
+    }
+
+    private Residence makeResidenceWithAt( uint[][] coordinates) {
+      return makeBuildingWithAt<Residence>( coordinates, 
+        (xCoordinate, yCoordinate, halfWidth, halfHeight, floorsNum) => 
+        new Residence( xCoordinate, yCoordinate, halfWidth, 
+        halfHeight, floorsNum));
+    }
+    
+    private Commerce makeCommerceWithAt( uint[][] coordinates) {
+      return makeBuildingWithAt<Commerce>( coordinates, 
+        (xCoordinate, yCoordinate, halfWidth, halfHeight, floorsNum) => 
+        new Commerce( xCoordinate, yCoordinate, halfWidth, 
+        halfHeight, floorsNum));
+    }
+    
+    private Quarentine makeQuarentineWithAt( uint[][] coordinates) {
+      return makeBuildingWithAt<Quarentine>( coordinates, 
+        (xCoordinate, yCoordinate, halfWidth, halfHeight, floorsNum) => 
+        new Quarentine( xCoordinate, yCoordinate, halfWidth, 
+        halfHeight, floorsNum));
+    }
+
+    private BuildingType makeBuildingWithAt<BuildingType>( uint[][] coordinates, 
+      Func<float,float,float,float,ushort,BuildingType> newBuilding) 
+      where BuildingType : Building {
+      uint[] startCoordinates = coordinates[0], endCoordinates = coordinates[1];
       uint[] doorCoordinates = coordinates[2];
-      uint area = (endCoordinates[0] - startCoordinates[0]) * 
-        (endCoordinates[1] - endCoordinates[1]);
-      ushort floorsNumber = getRandomBuildingFloorNumber( area);
-      
+      ushort floorsNumber = getRandomBuildingFloorNumber( startCoordinates,
+        endCoordinates);
+      var (xCoordinate, yCoordinate) = Building.getCoordinatesFromBounds(
+        startCoordinates, endCoordinates);
+      var (halfWidth, halfHeight) = Building.getDimesionsFromBounds(
+        startCoordinates, endCoordinates);
+      return newBuilding( xCoordinate, yCoordinate, halfWidth, 
+        halfHeight, floorsNumber);
+    }
+
+    private void placeBuildingOnStreet( Building building, 
+      Street street, uint[] doorCoordinates) {
+      var (doorXcoord, doorYcoord) = Building.getCoordinatesFromDiscrete(
+        doorCoordinates);
+      building.setDoorCoordinates( doorXcoord, doorYcoord);
+      building.streetAddress = street;
+      ushort streetSide = street.getThingRelativeSide( building);
+      building.makeEntryPointsOn( streetSide);
     }
 
     private void goThroughDirectionsFromCorner( uint x, uint y, 
@@ -88,11 +150,11 @@ namespace VirusSimulatorAvalonia.Models.lib.map {
       if (x < this.map.GetUpperBound( 1) && this.map[y,x + 1] > 0)
         this.goThroughStreet( x + 1, y, Defs.right, corner);
       if (y < this.map.GetUpperBound( 0) && this.map[y + 1,x] > 0)
-        this.goThroughStreet( x, y + 1, Defs.lower, corner);
+        this.goThroughStreet( x, y + 1, Defs.down, corner);
       if (x > 0 && this.map[y,x - 1] > 0)
         this.goThroughStreet( x - 1, y, Defs.left, corner);
       if (y > 0 && this.map[y - 1,x] > 0)
-        this.goThroughStreet( x, y - 1, Defs.upper, corner);
+        this.goThroughStreet( x, y - 1, Defs.up, corner);
     }
     
     private void goThroughStreet( uint startX, uint startY, ushort direction, 
@@ -117,8 +179,8 @@ namespace VirusSimulatorAvalonia.Models.lib.map {
     private Street makeStreetFromCorner( float xCoordinate, float yCoordinate, 
       float halfHeight, ushort direction, Corner corner) {
       Street newStreet = new Street( xCoordinate, yCoordinate, 
-        Consts.roadHalfWidth, halfHeight, direction == Defs.upper || 
-        direction == Defs.lower ? Defs.vertical : Defs.horizontal, corner);
+        Consts.roadHalfWidth, halfHeight, direction == Defs.up || 
+        direction == Defs.down ? Defs.vertical : Defs.horizontal, corner);
       corner.connectToPathOnDirection( newStreet, direction);
       return newStreet;
     }
@@ -144,7 +206,7 @@ namespace VirusSimulatorAvalonia.Models.lib.map {
       ushort direction, uint length, Street street) {
       uint x = startX, y = startY;
       int dx = direction == Defs.right ? 1 : (direction == Defs.left ? -1 : 0);
-      int dy = direction == Defs.lower ? 1 : (direction == Defs.upper ? -1 : 0);
+      int dy = direction == Defs.down ? 1 : (direction == Defs.up ? -1 : 0);
       while (length > 0) {
         this.pathMap[y,x] = street;
         x = (uint) (x + dx);
@@ -161,9 +223,13 @@ namespace VirusSimulatorAvalonia.Models.lib.map {
         "Map blueprint doesn't have street marker on first line.");
     }
 
-    private ushort getRandomBuildingFloorNumber( uint buildingArea) {
-      return (ushort) (1 + random.Gamma( (double) buildingArea / 4.0d, 
-        4.0d / (double) buildingArea));
+    private ushort getRandomBuildingFloorNumber( uint[] startCoordinates,
+      uint[] endCoordinates) {
+      uint buildingArea = (endCoordinates[0] - startCoordinates[0]) * 
+        (endCoordinates[1] - endCoordinates[1]);
+      double gammaParameter = (double) buildingArea * Consts.
+        randomBuildingFloorsScaleFactor;
+      return (ushort) (1 + random.Gamma( gammaParameter, gammaParameter));
     }
 
   }
@@ -171,11 +237,13 @@ namespace VirusSimulatorAvalonia.Models.lib.map {
 // Any implementation must NOT generate directly adjacent street corners! 
 // Any implementation must generate corners on dead ends!
 // Any implementation must return a matrix with 1s for street and 
-// any number greater than 1 for corners!
+// any number greater than 1 for corners! (else, 0)
   interface StreetMapAlgorithm {
     short[,] run( short[,] map, uint minSpaceBetweenStreets);
   }
 
+// The List on Dictionary is an array with 3 pairs: southwest coordinates,
+//  northeast coordinates and door coordinates, respectively.
   interface BuildingMapAlgorithm {
     Dictionary<Street,List<uint[][]>> run( Path[,] pathMap);
   }

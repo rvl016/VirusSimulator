@@ -1,5 +1,7 @@
 using System;	
 using System.Collections.Generic;
+using VirusSimulatorAvalonia.Models.defs;
+using VirusSimulatorAvalonia.Models.hidden.god;
 using VirusSimulatorAvalonia.Models.lib.things;
 
 namespace VirusSimulatorAvalonia.Models.things {
@@ -27,12 +29,13 @@ namespace VirusSimulatorAvalonia.Models.things {
     protected abstract void iterateLifeCycle();
     protected void changeStatus( short changedStateParam, bool isTrue) {
       short paramIsTrue = (short) (isTrue ? 1 : 0);
-      this.status = (ushort) ((this.status & ~ changedStateParam) & (changedStateParam * 
-        paramIsTrue));
+      this.status = (ushort) ((this.status & ~ changedStateParam) &
+       (changedStateParam * paramIsTrue));
     }
 
     protected void toggleStatus( short changedStateParam) {
-      this.changeStatus( changedStateParam, (this.status & changedStateParam) == 0);
+      this.changeStatus( changedStateParam, 
+        (this.status & changedStateParam) == 0);
     }
 
     protected bool statusIncludes( short state) {

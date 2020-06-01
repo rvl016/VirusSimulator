@@ -24,17 +24,44 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.buildings {
       this.effectiveArea = 4.0f * halfHeight * halfHeight * floorsNum;
     }
 
+    public static (float, float) getCoordinatesFromBounds( 
+      uint[] startCoordinates, uint[] endCoordinates) {
+      float xCoordinate = (startCoordinates[0] + endCoordinates[0]) * 
+        Consts.roadHalfWidth;
+      float yCoordinate = (startCoordinates[1] + endCoordinates[1]) * 
+        Consts.roadHalfWidth;
+      return (xCoordinate, yCoordinate);
+    }
+
+    public static (float, float) getDimesionsFromBounds(
+      uint[] startCoordinates, uint[] endCoordinates) {
+      float halfWidth = (endCoordinates[0] - startCoordinates[0]) * 
+        Consts.roadHalfWidth;
+      float halfHeight = (endCoordinates[1] - startCoordinates[1]) * 
+        Consts.roadHalfWidth;
+      return (halfWidth, halfHeight);
+    }
+
+    public static (float, float) getCoordinatesFromDiscrete(
+      uint[] coordinates) {
+      float xCoordinate = coordinates[0] * Consts.roadWidth + 
+        Consts.roadHalfWidth;
+      float yCoordinate = coordinates[1] * Consts.roadWidth + 
+        Consts.roadHalfWidth;
+      return (xCoordinate, yCoordinate);
+    }
+
     public void setDoorCoordinates( float xCoordinate, float yCoordinate) {
       this.buildingDoorCoordinates = new Coordinates( xCoordinate, 
         yCoordinate, 0);    
     }
     
-    public void makeEntryPointsOn( Street street, ushort streetSide) {
+    public void makeEntryPointsOn( ushort streetSide) {
+      Street street = this.streetAddress;
       this.sidewalkEntryPoint = street.makePedestrianEntryPointOnSideFor( 
         streetSide, this.buildingDoorCoordinates);
       this.streetEntryPoint = street.makeVehicleEntryPointOnSideFor( 
         streetSide, this.buildingDoorCoordinates);
     }
-
   }
 }

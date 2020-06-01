@@ -2,9 +2,10 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using VirusSimulatorAvalonia.Models.defs;
-using VirusSimulatorAvalonia.Models.hidden.god.world;
+using VirusSimulatorAvalonia.Models.lib.common;
 using VirusSimulatorAvalonia.Models.lib.things;
-
+using VirusSimulatorAvalonia.Models.hidden.god.world;
+using VirusSimulatorAvalonia.Models.things.inanimates.buildings;
 using VirusSimulatorAvalonia.Models.things.inanimates.paths;
 
 namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
@@ -19,7 +20,7 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
     public List<Building> rightSideBuildings;
     public List<Building> leftSideBuildings;
 
-    public override bool isMountable = true;
+    public override bool isMountable { get { return true; } }
 
     public Street( float xCoordinate, float yCoordinate, float halfWidth, 
       float halfHeight, ushort orientation, Path path = null) : 
@@ -35,21 +36,10 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
       this.makePathNodes();
     }
 
-    protected override void makePathNodes() {
-      List<Node>[] nodesBySide;
-      this.currentMasterNode = Node.pedestrianMasterNode;
-      nodesBySide = this.makeNodeQuadrature( 
-        Node.makeDoubleLinkBetween, this.getSidewalkMiddleRelativeWidth());
-      this.rightSidePedestrianPathNodes = nodesBySide[0];
-      this.leftSidePedestrianPathNodes = nodesBySide[1];
-
-      this.currentMasterNode = Node.vehicleMasterNode;
-      nodesBySide = this.makeNodeQuadrature( Node.makeLinkFromTo, 
-        this.getRoadMiddleRelativeWidth());
-      this.rightSideVehiclePathNodes = nodesBySide[0];
-      this.leftSideVehiclePathNodes = nodesBySide[1];
+    public ushort getThingRelativeSide( Thing thing) {
+      return this.coordinates.getRelativeSideOnAxisTo( this.orientation, 
+        thing.coordinates);
     }
-
     // To be called by other path to make nodes links
     public override List<Node> getPedestrianPathNodes( ushort direction) {
       List<Node> allPedestrianNodes = this.rightSidePedestrianPathNodes.Concat( 
@@ -92,13 +82,29 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
       return entryPoint;
     }
 
+    protected override void makePathNodes() {
+      List<Node>[] nodesBySide;
+      this.currentMasterNode = Node.pedestrianMasterNode;
+      nodesBySide = this.makeNodeQuadrature( 
+        Node.makeDoubleLinkBetween, this.getSidewalkMiddleRelativeWidth());
+      this.rightSidePedestrianPathNodes = nodesBySide[0];
+      this.leftSidePedestrianPathNodes = nodesBySide[1];
+
+      this.currentMasterNode = Node.vehicleMasterNode;
+      nodesBySide = this.makeNodeQuadrature( Node.makeLinkFromTo, 
+        this.getRoadMiddleRelativeWidth());
+      this.rightSideVehiclePathNodes = nodesBySide[0];
+      this.leftSideVehiclePathNodes = nodesBySide[1];
+    }
+
+
     // For connecting Streets on corners, must be called before making 
     //   buildings entry points!
     protected override void connectToVehiclePathOnDirection( Path that, 
       ushort direction) {
       List<Node> thisNodes = this.getVehiclePathNodes( direction);
       List<Node> thatNodes = that.getVehiclePathNodes( 
-        Defs.oppositeDirectionOf( direction));
+        Common.oppositeDirectionOf( direction));
       thatNodes = thatNodes.OrderBy( node => thisNodes.First().coordinates.
         getDistance( node.coordinates)).ToList();
       // 0 neighbor implies that this street node is right handed

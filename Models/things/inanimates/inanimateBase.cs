@@ -27,12 +27,10 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates {
 
     public abstract void makeEndPointOn( Path endpoint);
 
-    public void setOpen( bool open) {
-      this.changeStatus( Defs.open, open);  
-    }
+    public abstract void setOpenStatus( bool open); 
 
     public bool isOpen() {
-      return this.statusIncludes( Defs.open);
+      return this.statusIncludes( (short) Defs.open);
     }
   }
 }

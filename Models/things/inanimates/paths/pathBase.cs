@@ -14,7 +14,7 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths {
     }
     public Dictionary<uint,Vehicle> vehicles;
     public Dictionary<uint,Person> people;
-    public abstract bool isMountable;
+    public abstract bool isMountable { get; }
     
     protected Path( float xCoordinate, float yCoordinate, float halfWidth, 
       float halfHeight) :
