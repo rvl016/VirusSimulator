@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using VirusSimulatorAvalonia.Models.defs;
 using VirusSimulatorAvalonia.Models.lib.things;
 using VirusSimulatorAvalonia.Models.lib.events;
 using VirusSimulatorAvalonia.Models.hidden.god.world;
@@ -14,7 +15,7 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
     public ushort age;
     public float healthIndex;
     public Virus virus;
-    public Target routineTarget;
+    public Targets routineTargets;
     public Route pathRoutes;
     public Person interactingWith;
     public List<Person> friends;
@@ -46,7 +47,7 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
 
     // Only vehicles and people should do this
     protected override void defineNextTarget() {
-      this.target = this.routineTarget.getNextTarget();
+      this.target = this.routinesTarget.getNextTarget();
     }
       
     private void endInteraction() {

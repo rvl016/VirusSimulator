@@ -1,16 +1,26 @@
+using System.Linq;
 using System.Collections.Generic;
 using VirusSimulatorAvalonia.Models.defs;
+using VirusSimulatorAvalonia.Models.lib.common;
 using VirusSimulatorAvalonia.Models.things.inanimates.buildings;
 
 namespace VirusSimulatorAvalonia.Models.lib.things {
 
   public sealed class Node {
+
+    private sealed class TrackerAnnotations {
+      public bool visited = false;
+      public bool hasbeenBlocked = false;
+    }
+
     public static Node pedestrianMasterNode = new Node();
     public static Node vehicleMasterNode = new Node();
-    public Navegable nodeOwner;
-    public List<Node> neighbors;
-    public Building entryPoint = null;
     public Coordinates coordinates;
+    public List<Node> neighbors;
+    public Navegable nodeOwner;
+    public Building entryPoint = null;
+    private Dictionary<uint,TrackerAnnotations> trackersAnnotations = 
+      new Dictionary<uint,TrackerAnnotations>();
 
     public static Node makeNodeInPathWithCoordinates( Navegable path, 
       Coordinates coordinates) {
@@ -21,16 +31,6 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       newNode.coordinates = coordinates;
       return newNode;
     } 
-
-    public void switchMutualNeighborsFromTo( Node fromNode, Node toNode) {
-      Node.removeDoubleLinkBetween( this, fromNode);
-      Node.makeDoubleLinkBetween( this, toNode);
-    }
-
-    public void switchNeighborFromTo( Node fromNode, Node toNode) {
-      Node.removeLinkFromTo( this, fromNode);
-      Node.makeLinkFromTo( this, toNode);
-    }
 
     public static void makeLinkFromTo( Node fromNode, Node toNode) {
       fromNode.neighbors.Add( toNode);
@@ -50,21 +50,37 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       removeLinkFromTo( nodeTwo, nodeOne);
     }
 
-    public Node getNeighbourWithDirection( ushort direction) {
+    public void switchMutualNeighborsFromTo( Node fromNode, Node toNode) {
+      Node.removeDoubleLinkBetween( this, fromNode);
+      Node.makeDoubleLinkBetween( this, toNode);
+    }
+
+    public void switchNeighborFromTo( Node fromNode, Node toNode) {
+      Node.removeLinkFromTo( this, fromNode);
+      Node.makeLinkFromTo( this, toNode);
+    }
+
+    public bool isVisited( uint trackerId) {
+      if (! this.trackersAnnotations.ContainsKey( trackerId))
+        this.trackersAnnotations.Add( trackerId, new TrackerAnnotations());
+      return this.trackersAnnotations.
+        GetValueOrDefault( trackerId).visited;
+    }
+
+    public Node getNeighbourOnDirection( ushort direction) {
       Node node = null;
-      if (direction == Defs.right)
-        node = this.neighbors.Find( node => (node.coordinates.x - 
-          this.coordinates.x) > Consts.floatingPointMargin);
-      if (direction == Defs.lower)
-        node = this.neighbors.Find( node => (node.coordinates.y - 
-          this.coordinates.y) > Consts.floatingPointMargin);
-      if (direction == Defs.left)
-        node = this.neighbors.Find( node => (node.coordinates.x - 
-          this.coordinates.x) < -Consts.floatingPointMargin);
-      if (direction == Defs.upper)
-        node = this.neighbors.Find( node => (node.coordinates.y - 
-          this.coordinates.y) < -Consts.floatingPointMargin);
+      int dx = Common.getDxOfDirection( direction);
+      int dy = Common.getDyOfDirection( direction);
+      node = this.neighbors.FirstOrDefault( node => 
+        (node.coordinates.x - this.coordinates.x) * dx > Consts.
+        floatingPointMargin || 
+        (node.coordinates.y - this.coordinates.y) * dy > Consts.
+        floatingPointMargin);
       return node;
+    }
+
+    public void setEntryPoint( Building building) {
+      this.entryPoint = building;
     }
   }
 }

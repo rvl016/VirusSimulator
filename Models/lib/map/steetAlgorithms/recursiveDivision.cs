@@ -93,7 +93,7 @@ namespace VirusSimulatorAvalonia.Models.lib.map.streetAlgorithms {
       if (number - this.minSpaceBetweenStreets <= init ||
         number + this.minSpaceBetweenStreets >= end)
         return false;
-      return isDivisionPointImplyingAdjacentCorners( number) ? false : true;
+      return ! isDivisionPointImplyingAdjacentCorners( number);
     }
 
     private void setStreetParameters( ushort orientation, uint lowerLimit) {

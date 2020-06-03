@@ -9,12 +9,19 @@ namespace VirusSimulatorAvalonia.Models.hidden.god {
     public static uint numberOfInfected = 0;
     public static uint numberOfImmune = 0;
     public static uint deaths = 0;
+    public static float minUnemploymentRate = Defaults.minUnemploymentRate;
+    public static float worldDensity = Defaults.worldDensity;
+    public static float populationAgeFactor = Defaults.populationAgeFactor;
 
     public static void generateWorld() {
 
     }
      
     public static void generateThings() {
+
+    }
+
+    public static void destroyEveryLife() {
 
     }
 

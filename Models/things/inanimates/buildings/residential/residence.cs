@@ -1,3 +1,4 @@
+using VirusSimulatorAvalonia.Models.defs;
 using VirusSimulatorAvalonia.Models.hidden.god.world;
 using VirusSimulatorAvalonia.Models.things.inanimates.buildings;
 
@@ -14,5 +15,9 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.buildings.residence {
       ThingsPackage.add( this);
     }
     
+    public override void definePeopleCapacity() {
+      this.peopleCapacity = (uint) (this.effectiveArea * Consts.
+        residencePopulationFactor);
+    }
   }
 }

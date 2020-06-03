@@ -31,6 +31,11 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.buildings.commerce {
         return;
       this.changeStatus( (short) Defs.open, open);  
     }
+
+    public override void definePeopleCapacity() {
+      this.peopleCapacity = (uint) (this.effectiveArea * Consts.
+        commercePopulationFactor);
+    }
   }
 
 }

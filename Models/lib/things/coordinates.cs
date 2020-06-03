@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using VirusSimulatorAvalonia.Models.defs;
+using VirusSimulatorAvalonia.Models.lib.common;
 
 namespace VirusSimulatorAvalonia.Models.lib.things {
   public sealed class Coordinates {
@@ -14,6 +15,7 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       this.z = zCoordinate;
     }
 
+    // Only on same x,y plane
     public float getDistance( Coordinates that) {
       if (this.z != that.z)
         return float.MaxValue;
@@ -23,6 +25,18 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
 
     public Coordinates getRelativeCoordinates( float deltaX, float deltaY) {
       return new Coordinates( this.x + deltaX, this.y + deltaY, this.z);
+    }
+
+    public List<ushort> getCloserDirectionsTo( Coordinates that) {
+      int dx = (int) (that.x - this.x);
+      int dy = (int) (that.y - this.y);
+      return Common.getCloserDirectionsToDelta( dx, dy);
+    }
+
+    public ushort getRelativeSideOnAxisTo( ushort axis, Coordinates that) {
+      if (axis == Defs.horizontal ? this.y > that.y : this.x > that.x)
+        return Defs.left;
+      return Defs.right;
     }
 
     public Coordinates makeConvexCombination( Coordinates that, 
@@ -62,10 +76,5 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       return (betweenPoint.x - that.x) / (this.x - that.x);
     }
 
-    public ushort getRelativeSideOnAxisTo( ushort axis, Coordinates that) {
-      if (axis == Defs.horizontal ? this.y > that.y : this.x > that.x)
-        return Defs.left;
-      return Defs.right;
-    }
   }
 }

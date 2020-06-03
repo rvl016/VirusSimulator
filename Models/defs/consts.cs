@@ -18,5 +18,7 @@ namespace VirusSimulatorAvalonia.Models.defs {
     public static readonly float commerceProportion = .38f;
     public static readonly float quarentineProportion = .02f;
 
+    
+
   }
 }

@@ -1,3 +1,4 @@
+using System;
 using VirusSimulatorAvalonia.Models.defs;
 using VirusSimulatorAvalonia.Models.lib.things;
 using VirusSimulatorAvalonia.Models.things.inanimates.paths.street;
@@ -8,7 +9,6 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.buildings {
 
     public uint floorsNum;
     public uint peopleCapacity;
-
     public uint currentPeopleInside = 0;
     public float effectiveArea;
     public Street streetAddress;
@@ -23,6 +23,8 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.buildings {
       this.floorsNum = floorsNum;
       this.effectiveArea = 4.0f * halfHeight * halfHeight * floorsNum;
     }
+
+    public abstract void definePeopleCapacity();
 
     public static (float, float) getCoordinatesFromBounds( 
       uint[] startCoordinates, uint[] endCoordinates) {
@@ -51,17 +53,31 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.buildings {
       return (xCoordinate, yCoordinate);
     }
 
+    public void makeEntryPointsOn( ushort streetSide) {
+      Street street = this.streetAddress;
+      if (street == null)
+        throw new Exception( "Building has no street yet!");
+      makeSidewalkEntryPointOn( streetSide);
+      makeStreetEntryPointOn( streetSide);
+    }
+
     public void setDoorCoordinates( float xCoordinate, float yCoordinate) {
       this.buildingDoorCoordinates = new Coordinates( xCoordinate, 
         yCoordinate, 0);    
     }
     
-    public void makeEntryPointsOn( ushort streetSide) {
+    public void makeSidewalkEntryPointOn( ushort streetSide) {
       Street street = this.streetAddress;
       this.sidewalkEntryPoint = street.makePedestrianEntryPointOnSideFor( 
         streetSide, this.buildingDoorCoordinates);
+      this.sidewalkEntryPoint.setEntryPoint( this);
+    }
+
+    public void makeStreetEntryPointOn( ushort streetSide) {
+      Street street = this.streetAddress;
       this.streetEntryPoint = street.makeVehicleEntryPointOnSideFor( 
         streetSide, this.buildingDoorCoordinates);
-    }
+      this.streetEntryPoint.setEntryPoint( this); 
+    }  
   }
 }

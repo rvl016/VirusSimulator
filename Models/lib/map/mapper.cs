@@ -17,8 +17,8 @@ using VirusSimulatorAvalonia.Models.things.inanimates.paths.street;
 namespace VirusSimulatorAvalonia.Models.lib.map {
   sealed class Mapper {
 
-    static readonly uint minSpaceBetweenStreets = 3;
-    static TRandom random = new TRandom();
+    private static readonly uint minSpaceBetweenStreets = 3;
+    private static TRandom random = new TRandom();
     private short[,] map;
     private Path[,] pathMap;
     private StreetMapAlgorithm mapAlgorithm;
