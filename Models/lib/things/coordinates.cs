@@ -33,6 +33,10 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       return Common.getCloserDirectionsToDelta( dx, dy);
     }
 
+    public bool isOn( Coordinates that) {
+      return this.getDistance( that) < Consts.floatingPointMargin;
+    }
+
     public ushort getRelativeSideOnAxisTo( ushort axis, Coordinates that) {
       if (axis == Defs.horizontal ? this.y > that.y : this.x > that.x)
         return Defs.left;

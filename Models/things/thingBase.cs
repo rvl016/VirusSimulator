@@ -15,18 +15,20 @@ namespace VirusSimulatorAvalonia.Models.things {
     public Action nextAction;
     public Action scheduledAction;
     public Coordinates coordinates;
+
     protected Thing( float xCoordinate, float yCoordinate, ushort zCoordinate = 0) {
       this.id = maxId++;
       this.coordinates = new Coordinates( xCoordinate, yCoordinate, zCoordinate);
     }
+
     protected Thing( Coordinates coordinates) {
       this.id = maxId++;
       this.coordinates = coordinates;
     }
-
     
     public abstract Dictionary<string,string> dumpProperties(); 
     protected abstract void iterateLifeCycle();
+    
     protected void changeStatus( short changedStateParam, bool isTrue) {
       short paramIsTrue = (short) (isTrue ? 1 : 0);
       this.status = (ushort) ((this.status & ~ changedStateParam) &

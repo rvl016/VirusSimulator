@@ -42,7 +42,6 @@ namespace VirusSimulatorAvalonia.Models.lib.common {
       return clockwiseDirections.OrderByDescending( direction => 
         dx * getDxOfDirection( direction) + dy * getDyOfDirection( direction)).
         ToList();
-
     }
   }
 

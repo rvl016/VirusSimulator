@@ -4,6 +4,7 @@ using VirusSimulatorAvalonia.Models.defs;
 using VirusSimulatorAvalonia.Models.lib.things;
 using VirusSimulatorAvalonia.Models.lib.events;
 using VirusSimulatorAvalonia.Models.hidden.god.world;
+using VirusSimulatorAvalonia.Models.things.inanimates.buildings.residence;
 using VirusSimulatorAvalonia.Models.things.animates;
 using VirusSimulatorAvalonia.Models.things.virus;
 
@@ -15,7 +16,7 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
     public ushort age;
     public float healthIndex;
     public Virus virus;
-    public Targets routineTargets;
+    public Routine routine;
     public Route pathRoutes;
     public Person interactingWith;
     public List<Person> friends;
@@ -23,8 +24,8 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
     public Accommodable accommodation; 
     
     public Person( Residence house, ushort houseFloor) : 
-      base( house.coordinates.xCoordinate, 
-        house.coordinates.yCoordinate, houseFloor) {
+      base( house.coordinates.x, house.coordinates.y, houseFloor) {
+      this.routine = new Routine();
       ThingsPackage.add( this);
     } 
 
@@ -47,7 +48,7 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
 
     // Only vehicles and people should do this
     protected override void defineNextTarget() {
-      this.target = this.routinesTarget.getNextTarget();
+      this.target = this.routineTargets.getNextTarget();
     }
       
     private void endInteraction() {

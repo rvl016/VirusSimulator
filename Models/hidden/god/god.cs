@@ -12,6 +12,7 @@ namespace VirusSimulatorAvalonia.Models.hidden.god {
     public static float minUnemploymentRate = Defaults.minUnemploymentRate;
     public static float worldDensity = Defaults.worldDensity;
     public static float populationAgeFactor = Defaults.populationAgeFactor;
+    public static ulong timeDelta = Defaults.timeDelta;
 
     public static void generateWorld() {
 
@@ -27,6 +28,12 @@ namespace VirusSimulatorAvalonia.Models.hidden.god {
 
     public static void destroyWorld() {
 
+    }
+
+    public static void iterateWorldThroughTimeDelta() {
+      ulong timeDeltaLeft = timeDelta;
+      for (; timeDeltaLeft > 0; timeDeltaLeft--) 
+        Scheduler.generateNextFrame();
     }
 
     public static uint getCurrentTime() {

@@ -12,6 +12,12 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths {
       get;
       set;
     }
+
+    public bool isOpen {
+      get;
+      set;
+    }
+
     public Dictionary<uint,Vehicle> vehicles;
     public Dictionary<uint,Person> people;
     public abstract bool isMountable { get; }

@@ -4,5 +4,9 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
     Node currentMasterNode { 
       get; 
     }
+
+    bool isOpen {
+      get;
+    }
   }
 }
