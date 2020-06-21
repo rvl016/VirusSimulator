@@ -14,7 +14,7 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
     private Node currentNode = null;
     private Building origin;
     private Node originNode;
-    private Building destination;
+    public Building destination;
     private static uint maxId = 0;
     private uint id; 
     private uint users = 0;
@@ -113,7 +113,7 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
           destroyFirstRouteFrom( routes);
     }
 
-    public static Route getRouteBetweenBy( Building origin, 
+    private static Route getRouteBetweenBy( Building origin, 
       Building destination, ushort transport) {
       return allRoutes.GetValueOrDefault( (origin, destination, transport)).
         LastOrDefault();

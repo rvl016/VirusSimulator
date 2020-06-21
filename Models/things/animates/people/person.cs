@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using VirusSimulatorAvalonia.Models.defs;
 using VirusSimulatorAvalonia.Models.lib.things;
@@ -17,15 +18,18 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
     public float healthIndex;
     public Virus virus;
     public Routine routine;
-    public Route pathRoutes;
+    public Route currentRoute = null;
     public Person interactingWith;
     public List<Person> friends;
     public Vehicle ownVehicle;
+    public Residence home;
     public Accommodable accommodation; 
+    private bool canAnimate = true;
     
     public Person( Residence house, ushort houseFloor) : 
       base( house.coordinates.x, house.coordinates.y, houseFloor) {
-      this.routine = new Routine();
+      this.home = house;
+      this.routine = new Routine( house);
       ThingsPackage.add( this);
     } 
 
@@ -48,13 +52,30 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
 
     // Only vehicles and people should do this
     protected override void defineNextTarget() {
-      this.target = this.routineTargets.getNextTarget();
+      ulong compromiseTime;
+      Route route;
+      do 
+        (compromiseTime, route) = this.routine.getNextCompromise();
+      while (route != null && this.accommodation == route.destination);
+      if (route == null) 
+        callSchedulerForLater( defineNextTarget, Consts.retryInterval);
+      else
+        callSchedulerForAt( getOutAndFollowRoute, compromiseTime);
     }
       
+    private void getOutAndFollowRoute() {
+      Accommodable street = this.accommodation.endPoints.First();
+      if (! street.canAccommodate( this))
+        callSchedulerForLater( getOutAndFollowRoute, Consts.retryInterval);
+      this.accommodation.eject( this);
+      this.
+    }
+
     private void endInteraction() {
       this.interactingWith = null;
       this.iterateThroughPath();
     }
+
     private void interactWith( Person person, bool areFriends) {
       uint interactionTime = RandomEvents.getPeopleMutualInteractionTime(
         areFriends);

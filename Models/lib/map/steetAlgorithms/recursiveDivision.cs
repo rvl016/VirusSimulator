@@ -73,7 +73,7 @@ namespace VirusSimulatorAvalonia.Models.lib.map.streetAlgorithms {
         // Why 6.0f ? Because we want most streets next to middle point
         divisionPoint = (int) (random.Normal( middle, lengthBetween / 6.0f) +
          .5d);
-      } while(! isDivisionPointValidBetween( divisionPoint, init, end));
+      } while (! isDivisionPointValidBetween( divisionPoint, init, end));
       return (uint) divisionPoint;
     }
 

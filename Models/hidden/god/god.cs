@@ -40,6 +40,15 @@ namespace VirusSimulatorAvalonia.Models.hidden.god {
       return (uint) (secondsSinceEpoch / Consts.aDayInSeconds);
     }
 
+    public static ulong getTodayMidNight() {
+      ulong thisDay = secondsSinceEpoch / Consts.aDayInSeconds; 
+      return thisDay * Consts.aDayInSeconds;
+    }
+
+    public static ulong getTomorrowMidNight() {
+      return getTodayMidNight() + Consts.aDayInSeconds;
+    }
+
     
     // It must hold all parameters of the universe and all universe 
     //   rely on then, with except of the dictator, that is above 

@@ -14,13 +14,14 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       public ushort importance = 0;
       public uint startsAt = 0;
       public uint endsAt = Consts.aDayInSeconds - 1;
-      public Target next;
+      public Target next = null;
     }
 
     Building home;
     Target targetHead;
     Target targetPtr = null;
     Target currentTarget = null;
+    ushort numberOfDestinations = 1;
 
     public Routine( Building home) {
       this.home = home;
@@ -29,13 +30,46 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       this.targetHead.destination = home;
     }
 
-    public void makeTargetToBetween( Building destination, 
-      uint startsAt, uint endsAt) {
+    public void makeTargetToBetweenBy( Building destination, 
+      uint startsAt, uint endsAt, ushort transport) {
       Target target = new Target();
       target.destination = destination;
       target.startsAt = startsAt;
       target.endsAt = endsAt;
+      target.importance = 1;
       insertTargetInRoutine( target);
+      makeRouteForBy( target, transport);
+    }
+
+    public bool routineFitsInSchedule( uint startsAt, uint endsAt) {
+      this.targetPtr = this.targetHead;
+      while (this.targetPtr != null && this.targetPtr.endsAt <= endsAt
+        && this.targetPtr.startsAt >= startsAt)
+        this.targetPtr = this.targetPtr.next;
+      return this.targetPtr == null ? false : this.targetPtr.importance == 0;
+    }
+
+    public (ulong,Route) getNextCompromise() {
+      if (this.numberOfDestinations == 1)
+        return (0, null)
+      return (getNextCompromiseTime(), getNextCompromisseRoute());
+    }
+
+    private ulong getNextCompromiseTime() {
+      if (this.currentTarget == null)
+        this.currentTarget = this.targetHead;
+      ulong time = this.currentTarget.startsAt;
+      if (this.currentTarget.startsAt < God.getCurrentTime()) 
+        time += God.getTomorrowMidNight();
+      else 
+        time += God.getTodayMidNight();
+      return time;
+    }
+
+    private Route getNextCompromisseRoute() {
+      Route route = this.currentTarget.route;
+      this.currentTarget = this.currentTarget.next;
+      return route;
     }
 
     private void insertTargetInRoutine( Target target) {
@@ -43,20 +77,27 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
         throw new Exception( 
           "Inserting target without checking if it fits in schedule.");
       this.targetPtr.endsAt = target.startsAt;
-      Target newHomeTarget = getNewHomeTargetBetween( target.endsAt, 
-        this.targetPtr.endsAt);
-      newHomeTarget.next = this.targetPtr.next;
-      target.next = newHomeTarget;
+      target.origin = this.targetPtr.destination;
+      Target laterTarget = insertHomeTargetAfterNewTarget( target);
       this.targetPtr.next = target;
+      this.numberOfDestinations += 2;
       this.targetPtr = null;
     }
 
-    public bool routineFitsInSchedule( uint startsAt, uint endsAt) {
-      this.targetPtr = this.targetHead;
-      while (this.targetPtr != null && this.targetPtr.endsAt < endsAt 
-        && this.targetPtr.startsAt > startsAt)
-        this.targetPtr = this.targetPtr.next;
-      return this.targetPtr == null ? false : this.targetPtr.importance == 0;
+    private void makeRouteForBy( Target target, ushort transport) {
+      target.route = Route.newRouteBetweenBy( target.origin, 
+        target.destination, transport);
+      target.next.route = Route.newRouteBetweenBy( target.destination, 
+        target.next.destination, transport);
+    }
+
+    private Target insertHomeTargetAfterNewTarget( Target target) {
+      Target homeTarget = getNewHomeTargetBetween( target.endsAt, 
+        this.targetPtr.endsAt);
+      homeTarget.origin = target.destination;
+      homeTarget.next = this.targetPtr.next;
+      target.next = homeTarget;
+      return homeTarget;
     }
 
     private Target getNewHomeTargetBetween( uint startsAt, uint endsAt) {
@@ -67,6 +108,5 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       newTarget.endsAt = endsAt;
       return newTarget;
     }
-
   }
 }
