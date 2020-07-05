@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using VirusSimulatorAvalonia.Models.defs;
 using VirusSimulatorAvalonia.Models.hidden.god;
+using VirusSimulatorAvalonia.Models.lib.schedule;
 using VirusSimulatorAvalonia.Models.lib.things;
 
 namespace VirusSimulatorAvalonia.Models.things {
@@ -25,7 +26,6 @@ namespace VirusSimulatorAvalonia.Models.things {
     }
     
     public abstract Dictionary<string,string> dumpProperties(); 
-    protected abstract void iterateLifeCycle();
     
     protected void changeStatus( ushort changedStateParam, bool isTrue) {
       short paramIsTrue = (short) (isTrue ? 1 : 0);
@@ -54,8 +54,7 @@ namespace VirusSimulatorAvalonia.Models.things {
     }
 
     protected void callSchedulerFor( Action action) {
-      Schedule.enqueueAction( action);
+      Schedule.enqueueUrgentTask( action);
     }
-
   }
 }

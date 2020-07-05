@@ -13,7 +13,7 @@ namespace VirusSimulatorAvalonia.Models.things.animates {
 
     protected abstract void iterateThroughPath();
 
-    protected abstract void defineNextTarget();
+    protected abstract void defineNextRoute();
       
     protected abstract List<T> getAnimatesOnSight();
 
