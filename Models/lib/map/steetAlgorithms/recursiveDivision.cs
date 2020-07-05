@@ -1,5 +1,4 @@
 using Troschuetz.Random;
-using VirusSimulatorAvalonia.Models.lib.map;
 using VirusSimulatorAvalonia.Models.defs;
 
 namespace VirusSimulatorAvalonia.Models.lib.map.streetAlgorithms {
@@ -26,13 +25,13 @@ namespace VirusSimulatorAvalonia.Models.lib.map.streetAlgorithms {
 
     private void makeCrossesOnBounds() {
       for (uint i = 0; i <= this.map.GetUpperBound( 1); i++) {
-        if (this.map[0,i] > 0) 
+        if (this.map[0,i] == 1) 
           this.map[0,i]++;
         if (this.map[this.map.GetUpperBound( 0),i] > 0) 
           this.map[this.map.GetUpperBound( 0),i]++;
       }
       for (uint i = 0; i <= this.map.GetUpperBound( 0); i++) {
-        if (this.map[i,0] > 0) 
+        if (this.map[i,0] == 1) 
           this.map[i,0]++;
         if (this.map[i,this.map.GetUpperBound( 1)] > 0) 
           this.map[i,this.map.GetUpperBound( 1)]++;

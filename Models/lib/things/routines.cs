@@ -10,6 +10,7 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
     private sealed class Target {
       public Building origin = null;
       public Building destination = null;
+      public ushort destinationFloor;
       public Route route = null;
       public ushort importance = 0;
       public uint startsAt = 0;
@@ -17,11 +18,12 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       public Target next = null;
     }
 
-    Building home;
-    Target targetHead;
-    Target targetPtr = null;
-    Target currentTarget = null;
-    ushort numberOfDestinations = 1;
+    private Building home;
+    private Target targetHead;
+    private Target targetPtr = null;
+    private Target currentTarget = null;
+    private ushort numberOfDestinations = 1;
+    public ushort destinationFloor;
 
     public Routine( Building home) {
       this.home = home;
@@ -30,10 +32,11 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       this.targetHead.destination = home;
     }
 
-    public void makeTargetToBetweenBy( Building destination, 
+    public void makeTargetToBetweenBy( Building destination, ushort floor, 
       uint startsAt, uint endsAt, ushort transport) {
       Target target = new Target();
       target.destination = destination;
+      target.destinationFloor = floor;
       target.startsAt = startsAt;
       target.endsAt = endsAt;
       target.importance = 1;
@@ -51,13 +54,14 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
 
     public (ulong,Route) getNextCompromise() {
       if (this.numberOfDestinations == 1)
-        return (0, null)
+        return (0, null);
+      if (this.currentTarget == null)
+        this.currentTarget = this.targetHead;
+      this.destinationFloor = this.currentTarget.destinationFloor;
       return (getNextCompromiseTime(), getNextCompromisseRoute());
     }
 
     private ulong getNextCompromiseTime() {
-      if (this.currentTarget == null)
-        this.currentTarget = this.targetHead;
       ulong time = this.currentTarget.startsAt;
       if (this.currentTarget.startsAt < God.getCurrentTime()) 
         time += God.getTomorrowMidNight();

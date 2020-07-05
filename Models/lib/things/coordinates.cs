@@ -27,6 +27,12 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       return new Coordinates( this.x + deltaX, this.y + deltaY, this.z);
     }
 
+    public void setCoordinatesTo( Coordinates that) {
+      this.x = that.y;
+      this.y = that.y;
+      this.z = that.z;
+    }
+
     public List<ushort> getCloserDirectionsTo( Coordinates that) {
       int dx = (int) (that.x - this.x);
       int dy = (int) (that.y - this.y);
@@ -35,6 +41,12 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
 
     public bool isOn( Coordinates that) {
       return this.getDistance( that) < Consts.floatingPointMargin;
+    }
+
+    public void moveTowardsWith( Coordinates that, float displacement) {
+      float dx = that.x - this.x, dy = that.y - this.x;
+      this.x = Math.Sign( dx) * Math.Min( Math.Abs( dx), displacement);
+      this.y = Math.Sign( dy) * Math.Min( Math.Abs( dy), displacement);
     }
 
     public ushort getRelativeSideOnAxisTo( ushort axis, Coordinates that) {

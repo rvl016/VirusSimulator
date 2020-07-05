@@ -6,7 +6,7 @@ using VirusSimulatorAvalonia.Models.lib.things;
 using VirusSimulatorAvalonia.Models.lib.events;
 using VirusSimulatorAvalonia.Models.hidden.god.world;
 using VirusSimulatorAvalonia.Models.things.inanimates.buildings.residence;
-using VirusSimulatorAvalonia.Models.things.animates;
+using VirusSimulatorAvalonia.Models.things.animates.vehicles;
 using VirusSimulatorAvalonia.Models.things.virus;
 
 namespace VirusSimulatorAvalonia.Models.things.animates.people {
@@ -16,9 +16,11 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
     public bool isImmune; 
     public ushort age;
     public float healthIndex;
+    public float walkSpeed;
     public Virus virus;
     public Routine routine;
     public Route currentRoute = null;
+    public Node currentTarget = null;
     public Person interactingWith;
     public List<Person> friends;
     public Vehicle ownVehicle;
@@ -33,78 +35,128 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
       ThingsPackage.add( this);
     } 
 
-    private bool TryToGetIn( Accommodable accommodable) {
-      if (! accommodable.canAccommodate( this))
-        return false;
-      accommodable.host( this);
-      this.accommodation = accommodable;
-      return true;
-    } 
-
-    private void getOutAcommodation() {
-      this.accommodation.eject( this);
-      this.accommodation = null;
+    protected override void iterateThroughPath() {
+      if (this.interactingWith != null || this.willInteractWithPeople())
+        return;
+      if (this.currentTarget == null) {
+        terminateTrip();
+        return;
+      }
+      if (this.coordinates.isOn( this.currentTarget.coordinates)) {
+        goToNextNode();
+        return;
+      }
+      this.coordinates.moveTowardsWith( this.currentTarget.coordinates, 
+        this.walkSpeed);
+      callSchedulerFor( this.iterateThroughPath);
     }
 
-    private override void iterateThroughPath() {
+    private void terminateTrip() {
+      changeAccommodationTo( (Accommodable) this.currentRoute.destination);
+      this.changeStatus( Defs.moving, false);
+      enterBuilding();
+    }
 
+    private void goToNextNode() {
+      this.currentTarget = this.currentRoute.getNextNodeOnRoute();
+      iterateThroughPath();
+    }
+
+    private void enterBuilding() {
+      this.coordinates.setCoordinatesTo( this.accommodation.coordinates);
+      this.coordinates.z = this.routine.destinationFloor;
+      defineNextRoute();
+      // TODO: move around building
     }
 
     // Only vehicles and people should do this
-    protected override void defineNextTarget() {
+    protected override void defineNextRoute() {
       ulong compromiseTime;
       Route route;
       do 
         (compromiseTime, route) = this.routine.getNextCompromise();
       while (route != null && this.accommodation == route.destination);
-      if (route == null) 
-        callSchedulerForLater( defineNextTarget, Consts.retryInterval);
-      else
-        callSchedulerForAt( getOutAndFollowRoute, compromiseTime);
+      if (route == null || ! route.destination.isOpen()) 
+        callSchedulerForLater( defineNextRoute, Consts.retryInterval);
+      else {
+        this.currentRoute = route;
+        callSchedulerForAt( tryToFollowRoute, compromiseTime);
+      }
     }
       
-    private void getOutAndFollowRoute() {
+    private void tryToFollowRoute() {
       Accommodable street = this.accommodation.endPoints.First();
       if (! street.canAccommodate( this))
-        callSchedulerForLater( getOutAndFollowRoute, Consts.retryInterval);
-      this.accommodation.eject( this);
-      this.
+        callSchedulerForLater( tryToFollowRoute, Consts.retryInterval);
+      else { 
+        getInAccommodation( street);
+        followRouteFromStreet();
+      }
     }
 
-    private void endInteraction() {
-      this.interactingWith = null;
-      this.iterateThroughPath();
+    private void followRouteFromStreet() {
+      this.changeStatus( Defs.moving, true);
+      this.currentTarget = defineFirstStreetNode();
+      this.coordinates.setCoordinatesTo( this.currentTarget.coordinates);
+      iterateThroughPath();
+    }
+
+    private Node defineFirstStreetNode() {
+      this.currentRoute = this.currentRoute.callRoute();
+      return this.currentRoute.startRoute();
+    }
+
+    private bool willInteractWithPeople() {
+      foreach (Person person in getAnimatesOnSight()) {
+        bool areFriends = this.friends.Exists( friend => friend == person);
+        if (RandomEvents.bothWillInteractTogether( areFriends) &&
+          person.interactingWith == null) {
+          this.interactWith( person, areFriends);
+          return true;
+        }
+      }
+      return false;
     }
 
     private void interactWith( Person person, bool areFriends) {
       uint interactionTime = RandomEvents.getPeopleMutualInteractionTime(
         areFriends);
-      this.interactingWith = person;
       person.interactWithFor( this, interactionTime);
-      this.callSchedulerForLater( this.endInteraction, interactionTime);
+      this.interactWithFor( person, interactionTime);
     }
       
     public void interactWithFor( Person person, uint interactionTime) {
+      this.changeStatus( Defs.interacting, true);
       this.interactingWith = person;
       this.callSchedulerForLater( this.endInteraction, interactionTime);
     }
 
-    protected override List<Person> getSight() {
+    private void endInteraction() {
+      this.interactingWith = null;
+      this.changeStatus( Defs.interacting, false);
+      // TODO: Will it make a friend?
+      this.iterateThroughPath();
+    }
+    
+    protected override List<Person> getAnimatesOnSight() {
       return this.accommodation.getPeopleNextTo( this).FindAll( 
         person => this.coordinates.getDistance( person.coordinates) < 
         Consts.personRadius);
     }
-    
-    private void tryToInteractWithPeople() {
-      List<Person> peopleOnThisSight = getSight();
-      peopleOnThisSight.ForEach( person => {
-        bool areFriends = this.friends.Exists( friend => friend == person);
-        if (RandomEvents.bothWillInteractTogether( areFriends) &&
-          person.interactingWith == null) {
-          this.interactWith( person, areFriends);
-          return;
-        }
-      });
+
+    private void changeAccommodationTo( Accommodable accommodable) {
+      getOutCurrentAccommodation();
+      getInAccommodation( accommodable);
+    } 
+
+    private void getOutCurrentAccommodation() {
+      this.accommodation.eject( this);
+      this.accommodation = null;
+    }
+
+    private void getInAccommodation( Accommodable accommodable) {
+      accommodable.host( this);
+      this.accommodation = accommodable;
     }
   }
 }

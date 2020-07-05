@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+
+using VirusSimulatorAvalonia.Models.defs;
 using VirusSimulatorAvalonia.Models.lib.events;
 using VirusSimulatorAvalonia.Models.hidden.god.world;
 using VirusSimulatorAvalonia.Models.things;
@@ -19,7 +22,7 @@ namespace VirusSimulatorAvalonia.Models.things.virus {
       this.setIncubation();
     }
     public override Dictionary<string,string> dumpProperties() {
-
+      return new Dictionary<string, string>();
     }
 
     private void setIncubation() {

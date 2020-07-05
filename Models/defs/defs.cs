@@ -1,3 +1,4 @@
+
 namespace VirusSimulatorAvalonia.Models.defs {
   public static class Defs {
     // Things derivative classes states

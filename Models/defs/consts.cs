@@ -1,4 +1,4 @@
-using System;
+
 namespace VirusSimulatorAvalonia.Models.defs {
   public static class Consts {
     public static readonly float personSpeed = 0.0f;
@@ -9,7 +9,7 @@ namespace VirusSimulatorAvalonia.Models.defs {
     public static readonly float floatingPointMargin = 1.0e-6f;  
     public static readonly float roadHalfWidth = 20.0f;
     public static readonly float roadWidth = roadHalfWidth * 2.0f;
-
+    public static readonly uint retryInterval = 5;
     public static readonly uint aDayInSeconds = 86400;
     
     // Random Generation Related

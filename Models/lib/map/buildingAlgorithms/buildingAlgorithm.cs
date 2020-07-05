@@ -31,7 +31,7 @@ namespace VirusSimulatorAvalonia.Models.lib.map.buildingAlgorithms {
       return this.map;
     }
 
-    void findTerrainsFrom( uint startX, uint startY) {
+    private void findTerrainsFrom( uint startX, uint startY) {
       if (startY == this.pathMap.GetLength( 0)) return;
       if (startX == this.pathMap.GetLength( 1)) findTerrainsFrom( 0, 
         startY + 1);
@@ -44,7 +44,8 @@ namespace VirusSimulatorAvalonia.Models.lib.map.buildingAlgorithms {
       findTerrainsFrom( endX + 1, startY);
     }
 
-    uint getYupperBoundFromWith( uint startX, uint startY, uint maxX) {
+    private uint getYupperBoundFromWith( uint startX, uint startY, 
+      uint maxX) {
       uint endY = startY, x;
       do {
         endY++;
@@ -56,7 +57,7 @@ namespace VirusSimulatorAvalonia.Models.lib.map.buildingAlgorithms {
       return endY;
     }
 
-    uint getXupperBoundFromAt( uint startX, uint y) {
+    private uint getXupperBoundFromAt( uint startX, uint y) {
       uint endX = startX;
       while (endX < this.pathMap.GetUpperBound( 1) && 
         this.pathMap[y,endX + 1] == null) 
@@ -64,7 +65,8 @@ namespace VirusSimulatorAvalonia.Models.lib.map.buildingAlgorithms {
       return endX;
     }
     
-    void buildOnTerrain( uint startX, uint startY, uint endX, uint endY) {
+    private void buildOnTerrain( uint startX, uint startY, uint endX, 
+      uint endY) {
       if (this.pathMap[startY,Math.Min( endX + 1, 
         pathMap.GetUpperBound( 1))] != null)
         buildFacadeAtWith( endX, startY, Defs.right);
@@ -77,7 +79,7 @@ namespace VirusSimulatorAvalonia.Models.lib.map.buildingAlgorithms {
         buildFacadeAtWith( startX, startY, Defs.up);
     }
 
-    void buildFacadeAtWith( uint x, uint y, ushort direction) {
+    private void buildFacadeAtWith( uint x, uint y, ushort direction) {
       int dx = getNextClockwiseDxOf( direction);
       int dy = getNextClockwiseDyOf( direction);
       uint[] maxDimensions;

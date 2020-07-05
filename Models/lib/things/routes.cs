@@ -10,7 +10,7 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
     private static 
       Dictionary<(Building,Building,ushort),List<Route>> allRoutes;
     private readonly Node masterNode;
-    private ushort transport;
+    public ushort transport;
     private Node currentNode = null;
     private Building origin;
     private Node originNode;
@@ -58,22 +58,18 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       return newRoute;
     }
 
-    private Route makeRouteWithSameParameters() {
-      Route newRoute = new Route( this.origin, this.destination, 
-        this.transport);
-      getAllAlternativeRoutes().Append( newRoute);
-      return newRoute;
+    // Whenever you will start using a route, you must call it before anything.
+    public Route callRoute() {
+      if (this.isDead)
+        return getRouteBetweenBy( this.origin, this.destination, 
+          this.transport);
+      return this;
     }
-
-    private void dupRouteUntilCurrentNodeOn( Route newRoute) {
-      Node node = this.originNode;
-      for (; node != this.currentNode; node = node.getNextNeighbor( this.id))
-        node.dupAnnotationFromTo( this.id, newRoute.id);
-    }
-
-    private List<Route> getAllAlternativeRoutes() {
-      return allRoutes.GetValueOrDefault( (this.origin, this.destination, 
-        this.transport));
+    // Because of the following:
+    public static void destroyOldRoutes() {
+      foreach (List<Route> routes in allRoutes.Values) 
+        while (routes.Count() > 1 && routes.First().users == 0) 
+          destroyFirstRouteFrom( routes);
     }
 
     public Node startRoute() {
@@ -92,25 +88,29 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
       return iterateThroughRoute();
     }
 
+    private Route makeRouteWithSameParameters() {
+      Route newRoute = new Route( this.origin, this.destination, 
+        this.transport);
+      getAllAlternativeRoutes().Append( newRoute);
+      return newRoute;
+    }
+
+    private void dupRouteUntilCurrentNodeOn( Route newRoute) {
+      Node node = this.originNode;
+      for (; node != this.currentNode; node = node.getNextNeighbor( this.id))
+        node.dupAnnotationFromTo( this.id, newRoute.id);
+    }
+
+    private List<Route> getAllAlternativeRoutes() {
+      return allRoutes.GetValueOrDefault( (this.origin, this.destination, 
+        this.transport));
+    }
+
     private Node iterateThroughRoute() {
       this.currentNode = this.currentNode.getNextNeighbor( this.id);
       if (this.currentNode == null)
         this.users--;
       return this.currentNode;
-    }
-
-    // Whenever you will start using a route, you must call it before anything.
-    public Route callRoute() {
-      if (this.isDead)
-        return getRouteBetweenBy( this.origin, this.destination, 
-          this.transport);
-      return this;
-    }
-    // Because of the following:
-    public static void destroyOldRoutes() {
-      foreach (List<Route> routes in allRoutes.Values) 
-        while (routes.Count() > 1 && routes.First().users == 0) 
-          destroyFirstRouteFrom( routes);
     }
 
     private static Route getRouteBetweenBy( Building origin, 
