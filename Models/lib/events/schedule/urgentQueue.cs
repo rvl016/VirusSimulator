@@ -9,12 +9,12 @@ namespace VirusSimulatorAvalonia.Models.lib.schedule {
     static List<Action> currentActions = new List<Action>();
     static List<Action> nextActions = new List<Action>();
     
-    public static void runCurrentAnimations() {
+    public static void runCurrentActions() {
       currentActions = nextActions;
       nextActions.Clear();
-      currentActions.ForEach( action => {
+      currentActions.ForEach( doAction => {
         try {
-          action();
+          doAction();
         } 
         catch {
           Console.Out.WriteLine( "UrgentQueue: can't do an action.");

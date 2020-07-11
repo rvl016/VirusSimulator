@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using VirusSimulatorAvalonia.Models.defs;
 using VirusSimulatorAvalonia.Models.lib.events;
+using VirusSimulatorAvalonia.Models.hidden.god;
 using VirusSimulatorAvalonia.Models.hidden.god.world;
 using VirusSimulatorAvalonia.Models.things;
 using VirusSimulatorAvalonia.Models.things.animates;
@@ -11,9 +12,9 @@ using VirusSimulatorAvalonia.Models.things.animates.people;
 namespace VirusSimulatorAvalonia.Models.things.virus {
   public sealed class Virus : Thing {
 
-    float currentInfectionRadius;
-    ulong whenImmunityWillSettleInSecs;
-    Person host;
+    private float currentInfectionRadius;
+    private ulong whenImmunityWillSettleInSecs;
+    public Person host;
     Virus( Person host) : 
       base( host.coordinates) {
       ThingsPackage.add( this);
@@ -21,19 +22,19 @@ namespace VirusSimulatorAvalonia.Models.things.virus {
       this.host = host;
       this.setIncubation();
     }
-    public override Dictionary<string,string> dumpProperties() {
-      return new Dictionary<string, string>();
+    public override void dumpProperties() {
+      
     }
 
     private void setIncubation() {
-      this.changeStatus( Consts.incubating, true);
+      this.changeStatus( Defs.incubating, true);
       uint incubationTime = RandomEvents.getVirusIncubationTimeByAgeAndHealthIdx(
         this.host.age, this.host.healthIndex);
       callSchedulerForLater( this.terminateIncubation, incubationTime);
     }
 
     private void terminateIncubation() {
-      this.changeStatus( Consts.incubating, false);
+      this.changeStatus( Defs.incubating, false);
       this.defineWhenImmunityWillSettle();
       this.iterateLifeCycle();
     }
@@ -44,7 +45,7 @@ namespace VirusSimulatorAvalonia.Models.things.virus {
         this.host.age, this.host.healthIndex);
     }
 
-    protected override void iterateLifeCycle() {
+    private void iterateLifeCycle() {
       if (God.secondsSinceEpoch >= this.whenImmunityWillSettleInSecs) {
         this.host.becomeImmune();
         this.die();
@@ -69,9 +70,9 @@ namespace VirusSimulatorAvalonia.Models.things.virus {
     }
 
     private void die() {
+      ThingsPackage.remove( this);
       this.host.virus = null;
       this.host = null;
-      ThingsPackage.delVirus( this);
     }
   }
 }

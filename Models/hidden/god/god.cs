@@ -1,5 +1,9 @@
 using VirusSimulatorAvalonia.Models.defs;
 
+using VirusSimulatorAvalonia.Models.lib.schedule;
+
+using VirusSimulatorAvalonia.Models.things.animates.people;
+
 namespace VirusSimulatorAvalonia.Models.hidden.god {
 
   public static class God {
@@ -28,6 +32,17 @@ namespace VirusSimulatorAvalonia.Models.hidden.god {
 
     public static void destroyWorld() {
 
+    }
+    
+    public static void announceDeath( Person person) {
+      // TODO: Echo death as event
+      worldPopulation--;
+    }
+
+    public static void announceNewImmune( Person person) {
+      numberOfImmune++;
+      numberOfInfected--;
+      // TODO: Echo new immune as event
     }
 
     public static void iterateWorldThroughTimeDelta() {

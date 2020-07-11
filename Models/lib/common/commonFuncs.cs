@@ -28,7 +28,7 @@ namespace VirusSimulatorAvalonia.Models.lib.common {
         GetValueOrDefault( 'y');
     }
 
-    public static ushort getOppositeDirection( ushort direction) {
+    public static ushort getOppositeDirectionOf( ushort direction) {
       return getNextClockwiseDirection( direction, 2);
     }
 

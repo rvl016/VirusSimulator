@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using VirusSimulatorAvalonia.Models.lib.common;
 using VirusSimulatorAvalonia.Models.lib.things;
 using VirusSimulatorAvalonia.Models.hidden.god.world;
 using VirusSimulatorAvalonia.Models.defs;
@@ -20,8 +21,17 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.corner {
       halfWidth) {
       ThingsPackage.add( this);
       if (path != null)
-        this.endPoints = new List<Path> { path };
+        this.endPoints = new List<Accommodable> { path };
       this.makePathNodes();
+    }
+
+    public override List<Node> getPedestrianPathNodesOnSide( 
+      ushort direction) {
+      return this.pedestrianNodes;
+    }
+
+    public override List<Node> getVehiclePathNodesOnSide( ushort direction) {
+      return this.vehicleNodes;
     }
 
     protected override void makePathNodes() {
@@ -58,9 +68,9 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.corner {
 
     protected override void connectToVehiclePathOnDirection( Path that, 
       ushort direction) {
-      List<Node> thisNodes = this.getVehiclePathNodes( direction);
-      List<Node> thatNodes = that.getVehiclePathNodes( 
-        Defs.oppositeDirectionOf( direction));
+      List<Node> thisNodes = this.getVehiclePathNodesOnSide( direction);
+      List<Node> thatNodes = that.getVehiclePathNodesOnSide( 
+        Common.getOppositeDirectionOf( direction));
       thatNodes = thatNodes.OrderBy( node => thisNodes.First().coordinates.
         getDistance( node.coordinates)).ToList();
       // 0 neighbor implies that that street node is right handed
@@ -73,8 +83,5 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.corner {
         Node.makeLinkFromTo( thatNodes.Last(), thisNodes.Last());
       }
     } 
-
-    public abstract Dictionary<string,string> dumpProperties(); 
-    protected abstract void iterateLifeCycle();
   }
 }

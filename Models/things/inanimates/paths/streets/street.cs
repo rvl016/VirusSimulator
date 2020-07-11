@@ -6,7 +6,6 @@ using VirusSimulatorAvalonia.Models.lib.common;
 using VirusSimulatorAvalonia.Models.lib.things;
 using VirusSimulatorAvalonia.Models.hidden.god.world;
 using VirusSimulatorAvalonia.Models.things.inanimates.buildings;
-using VirusSimulatorAvalonia.Models.things.inanimates.paths;
 
 namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
   public sealed class Street : Path {
@@ -19,7 +18,6 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
     public List<Node> currentPathNodeList;
     public List<Building> rightSideBuildings;
     public List<Building> leftSideBuildings;
-
     public override bool isMountable { get { return true; } }
 
     public Street( float xCoordinate, float yCoordinate, float halfWidth, 
@@ -27,7 +25,7 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
       base( xCoordinate, yCoordinate, halfWidth, halfHeight) {
       ThingsPackage.add( this);
       if (path != null)
-        this.endPoints = new List<Path> { path };
+        this.endPoints = new List<Accommodable> { path };
       this.orientation = orientation;
       if (this.orientation == Defs.horizontal)
         this.makeNodeQuadrature = this.makeHorizontalNodeQuadrature;
@@ -36,18 +34,23 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
       this.makePathNodes();
     }
 
+    protected override void iterateLifeCycle() {
+      
+    }
+
     public ushort getThingRelativeSide( Thing thing) {
       return this.coordinates.getRelativeSideOnAxisTo( this.orientation, 
         thing.coordinates);
     }
     // To be called by other path to make nodes links
-    public override List<Node> getPedestrianPathNodes( ushort direction) {
+    public override List<Node> getPedestrianPathNodesOnSide( 
+      ushort direction) {
       List<Node> allPedestrianNodes = this.rightSidePedestrianPathNodes.Concat( 
         this.leftSidePedestrianPathNodes).ToList();
       return this.filterNodesForDirection( allPedestrianNodes, direction);
     }
 
-    public override List<Node> getVehiclePathNodes( ushort direction) {
+    public override List<Node> getVehiclePathNodesOnSide( ushort direction) {
       List<Node> allVehicleNodes = this.rightSideVehiclePathNodes.Concat( 
         this.leftSideVehiclePathNodes).ToList();
       return this.filterNodesForDirection( allVehicleNodes, direction);
@@ -102,9 +105,9 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
     //   buildings entry points!
     protected override void connectToVehiclePathOnDirection( Path that, 
       ushort direction) {
-      List<Node> thisNodes = this.getVehiclePathNodes( direction);
-      List<Node> thatNodes = that.getVehiclePathNodes( 
-        Common.oppositeDirectionOf( direction));
+      List<Node> thisNodes = this.getVehiclePathNodesOnSide( direction);
+      List<Node> thatNodes = that.getVehiclePathNodesOnSide( 
+        Common.getOppositeDirectionOf( direction));
       thatNodes = thatNodes.OrderBy( node => thisNodes.First().coordinates.
         getDistance( node.coordinates)).ToList();
       // 0 neighbor implies that this street node is right handed
@@ -168,10 +171,10 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
     private List<Node> filterNodesForDirection( List<Node> nodes, 
       ushort direction) {
       if (this.orientation == Defs.horizontal)
-        return nodes.FindAll( node => direction == Defs.upper ? 
+        return nodes.FindAll( node => direction == Defs.up ? 
           node.coordinates.x > this.coordinates.x : node.coordinates.x < 
           this.coordinates.x);
-      return nodes.FindAll( node => direction == Defs.upper ? 
+      return nodes.FindAll( node => direction == Defs.up ? 
         node.coordinates.y < this.coordinates.y : node.coordinates.y > 
         this.coordinates.y);
     }
@@ -210,16 +213,15 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths.street {
     }
 
     private int getEntryPointInsertionIndex( Coordinates doorCoordinates) {
-        List<Coordinates> pathNodesCoordinates = this.
-          currentPathNodeList.Select( node => node.coordinates).ToList();
-        int insertIndex = Coordinates.findConsecutivePointsForCovexCobinationOf(
-          pathNodesCoordinates, doorCoordinates, this.orientation);
+      List<Coordinates> pathNodesCoordinates = this.
+        currentPathNodeList.Select( node => node.coordinates).ToList();
+      int insertIndex = Coordinates.findConsecutivePointsForCovexCobinationOf(
+        pathNodesCoordinates, doorCoordinates, this.orientation);
       return insertIndex;
     }
 
+    public override void dumpProperties() {
 
-    public abstract Dictionary<string,string> dumpProperties(); 
-
-    protected abstract void iterateLifeCycle();
+    } 
   }  
 }

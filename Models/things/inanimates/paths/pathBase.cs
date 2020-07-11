@@ -1,5 +1,7 @@
 using System.Linq;
 using System.Collections.Generic;
+using VirusSimulatorAvalonia.Models.defs;
+using VirusSimulatorAvalonia.Models.lib.common;
 using VirusSimulatorAvalonia.Models.lib.things;
 using VirusSimulatorAvalonia.Models.things.inanimates;
 using VirusSimulatorAvalonia.Models.things.animates.people;
@@ -12,14 +14,12 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths {
       get;
       set;
     }
-
-    public bool isOpen {
+    public Dictionary<uint,Vehicle> vehicles;
+    public Dictionary<uint,Person> people;
+    public override List<Accommodable> endPoints {
       get;
       set;
     }
-
-    public Dictionary<uint,Vehicle> vehicles;
-    public Dictionary<uint,Person> people;
     public abstract bool isMountable { get; }
     
     protected Path( float xCoordinate, float yCoordinate, float halfWidth, 
@@ -31,12 +31,29 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths {
 
     protected abstract void makePathNodes();
 
-    public abstract List<Node> getPedestrianPathNodes( ushort direction);
+    public abstract List<Node> getPedestrianPathNodesOnSide( ushort direction);
 
-    public abstract List<Node> getVehiclePathNodes( ushort direction);
+    public abstract List<Node> getVehiclePathNodesOnSide( ushort direction);
     
     protected abstract void connectToVehiclePathOnDirection( Path that, 
       ushort direction);
+
+    public override void dumpProperties() {
+
+    }
+
+    protected override void iterateLifeCycle() {
+
+    }
+
+    public bool canAccommodate( Vehicle vehicle) {
+      //TODO: Maybe here is the opportunity to verify vehicle's licence plate.
+      return this.isOpen;
+    }
+
+    public bool canAccommodate( Person person) {
+      return this.isOpen;
+    }
 
     public void connectToPathOnDirection( Path that, ushort direction) {
       this.connectToPedestrianPathOnDirection( that, direction);
@@ -45,9 +62,9 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths {
 
     protected void connectToPedestrianPathOnDirection( Path that, 
       ushort direction) {
-      List<Node> thisNodes = this.getPedestrianPathNodes( direction);
-      List<Node> thatNodes = that.getPedestrianPathNodes( 
-        Defs.oppositeDirectionOf( direction));
+      List<Node> thisNodes = this.getPedestrianPathNodesOnSide( direction);
+      List<Node> thatNodes = that.getPedestrianPathNodesOnSide( 
+        Common.getOppositeDirectionOf( direction));
       thatNodes = thatNodes.OrderBy( node => thisNodes.First().coordinates.
         getDistance( node.coordinates)).ToList();
       Node.makeDoubleLinkBetween( thisNodes.First(), thatNodes.First()); 
@@ -78,7 +95,7 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths {
       return true;
     }
 
-    public void host( Person person) {
+    public void host( Person person, ushort floor) {
       this.people.Add( person.id, person);
     }
 

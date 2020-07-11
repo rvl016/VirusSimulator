@@ -11,9 +11,10 @@ using VirusSimulatorAvalonia.Models.things.virus;
 namespace VirusSimulatorAvalonia.Models.things.animates.vehicles {
   public sealed class Vehicle : Animate<Vehicle> {
 
+
     Vehicle( float xCoordinate, float yCoordinate) : 
       base( xCoordinate, yCoordinate, 0) {
-
     }
+
   }
 }

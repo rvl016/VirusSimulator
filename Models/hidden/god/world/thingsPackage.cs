@@ -6,8 +6,8 @@ using VirusSimulatorAvalonia.Models.things.inanimates.buildings;
 using VirusSimulatorAvalonia.Models.things.inanimates.buildings.quarentine;
 using VirusSimulatorAvalonia.Models.things.inanimates.buildings.commerce;
 using VirusSimulatorAvalonia.Models.things.inanimates.buildings.residence;
-using VirusSimulatorAvalonia.Models.things.animates.vehicle;
 using VirusSimulatorAvalonia.Models.things.virus;
+using VirusSimulatorAvalonia.Models.things.animates.vehicles;
 using VirusSimulatorAvalonia.Models.things.animates.people;
 
 namespace VirusSimulatorAvalonia.Models.hidden.god.world {
@@ -59,13 +59,12 @@ namespace VirusSimulatorAvalonia.Models.hidden.god.world {
 
     public static void remove( Person person) {
       people.Remove( person);
-      God.deaths++;
-      God.worldPopulation--;    
+      God.announceDeath( person);
     }
 
     public static void remove( Virus virus) {
       viruses.Remove( virus);
-      God.numberOfInfected--;    
+      God.announceNewImmune( virus.host);
     }
 
     public static void removeAll() {

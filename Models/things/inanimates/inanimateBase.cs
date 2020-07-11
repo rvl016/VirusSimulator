@@ -8,7 +8,14 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates {
 
   public abstract class Inanimate : Thing {
 
-    public List<Path> endPoints;
+    public bool isOpen {
+      get { return this.getOpenStatus(); }
+      set { this.setOpenStatus( value); }
+    }
+    public abstract List<Accommodable> endPoints {
+      get;
+      set;
+    }
     public float halfWidth;
     public float halfHeight;
       // It can hold animates
@@ -18,19 +25,19 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates {
       base( xCoordinate, yCoordinate, 0) {
       this.halfHeight = halfHeight;
       this.halfWidth = halfWidth;
-      this.endPoints = new List<Path>();
+      this.endPoints = new List<Accommodable>();
     }
-
-    public abstract Dictionary<string,string> dumpProperties(); 
 
     protected abstract void iterateLifeCycle();
 
     public abstract void makeEndPointOn( Path endpoint);
 
-    public abstract void setOpenStatus( bool open); 
+    protected void setOpenStatus( bool open) {
+      this.changeStatus( Defs.open, open);
+    } 
 
-    public bool isOpen() {
-      return this.statusIncludes( (short) Defs.open);
+    protected bool getOpenStatus() {
+      return this.statusIncludes( Defs.open);
     }
   }
 }

@@ -12,8 +12,10 @@ namespace VirusSimulatorAvalonia.Models.things {
     protected static uint maxId = 0;
     public uint id;
     public ushort status;
-
-    public Coordinates coordinates;
+    public Coordinates coordinates {
+      get;
+      set;
+    }
 
     protected Thing( float xCoordinate, float yCoordinate, ushort zCoordinate = 0) {
       this.id = maxId++;
@@ -25,7 +27,7 @@ namespace VirusSimulatorAvalonia.Models.things {
       this.coordinates = coordinates;
     }
     
-    public abstract Dictionary<string,string> dumpProperties(); 
+    public abstract void dumpProperties(); 
     
     protected void changeStatus( ushort changedStateParam, bool isTrue) {
       short paramIsTrue = (short) (isTrue ? 1 : 0);
@@ -38,23 +40,23 @@ namespace VirusSimulatorAvalonia.Models.things {
         (this.status & changedStateParam) == 0);
     }
 
-    protected bool statusIncludes( short state) {
+    public bool statusIncludes( ushort state) {
       return (this.status & state) != 0;
     }
 
     protected void callSchedulerForAt( Action laterAction, 
       ulong time) {
-      Schedule.scheduleTask( laterAction, time);
+      Scheduler.scheduleTask( laterAction, time);
     }
 
     protected void callSchedulerForLater( Action laterAction, 
       uint secondsFromNow) {
       ulong whenActionRunsInSeconds = God.secondsSinceEpoch + secondsFromNow;
-      Schedule.scheduleTask( laterAction, whenActionRunsInSeconds);
+      Scheduler.scheduleTask( laterAction, whenActionRunsInSeconds);
     }
 
     protected void callSchedulerFor( Action action) {
-      Schedule.enqueueUrgentTask( action);
+      Scheduler.enqueueUrgentTask( action);
     }
   }
 }

@@ -8,6 +8,8 @@ namespace VirusSimulatorAvalonia.Models.defs {
     public static readonly ushort open = 0b1000;
     public static readonly ushort mandatoryClose = 0b10000;
     public static readonly ushort interacting = 0b100000;
+    public static readonly ushort immune = 0b1000000;
+    public static readonly ushort dead = 0b10000000;
 
     // People means of transport
     public static readonly ushort onFoot = 0b1;

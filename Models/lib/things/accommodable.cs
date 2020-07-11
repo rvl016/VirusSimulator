@@ -9,7 +9,7 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
     Coordinates coordinates { get; }
     bool canAccommodate( Person person);
     bool canAccommodate( Vehicle vehicle);
-    void host( Person person);
+    void host( Person person, ushort floor = 0);
     void host( Vehicle vehicle);
     void eject( Person person);
     void eject( Vehicle vehicle);

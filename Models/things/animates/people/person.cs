@@ -25,8 +25,6 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
     public List<Person> friends;
     public Vehicle ownVehicle;
     public Residence home;
-    public Accommodable accommodation; 
-    private bool canAnimate = true;
     
     public Person( Residence house, ushort houseFloor) : 
       base( house.coordinates.x, house.coordinates.y, houseFloor) {
@@ -36,7 +34,8 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
     } 
 
     protected override void iterateThroughPath() {
-      if (this.interactingWith != null || this.willInteractWithPeople())
+      if (this.statusIncludes( Defs.dead) || this.interactingWith != null || 
+        this.willInteractWithPeople())
         return;
       if (this.currentTarget == null) {
         terminateTrip();
@@ -76,7 +75,7 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
       do 
         (compromiseTime, route) = this.routine.getNextCompromise();
       while (route != null && this.accommodation == route.destination);
-      if (route == null || ! route.destination.isOpen()) 
+      if (route == null || ! route.destination.isOpen) 
         callSchedulerForLater( defineNextRoute, Consts.retryInterval);
       else {
         this.currentRoute = route;
@@ -125,7 +124,7 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
       this.interactWithFor( person, interactionTime);
     }
       
-    public void interactWithFor( Person person, uint interactionTime) {
+    private void interactWithFor( Person person, uint interactionTime) {
       this.changeStatus( Defs.interacting, true);
       this.interactingWith = person;
       this.callSchedulerForLater( this.endInteraction, interactionTime);
@@ -139,9 +138,13 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
     }
     
     protected override List<Person> getAnimatesOnSight() {
-      return this.accommodation.getPeopleNextTo( this).FindAll( 
-        person => this.coordinates.getDistance( person.coordinates) < 
-        Consts.personRadius);
+      return this.getAccessiblePeople().FindAll( 
+        person => this.coordinates.getDistance( person.coordinates) 
+        < Consts.personRadius);
+    }
+
+    public List<Person> getAccessiblePeople() {
+      return this.accommodation.getPeopleNextTo( this);
     }
 
     private void changeAccommodationTo( Accommodable accommodable) {
@@ -157,6 +160,16 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
     private void getInAccommodation( Accommodable accommodable) {
       accommodable.host( this);
       this.accommodation = accommodable;
+    }
+
+    public void becomeImmune() {
+      this.changeStatus( Defs.immune, true);
+    }
+
+    public void die() {
+      // May cause process crash
+      this.coordinates = null;
+      this.changeStatus( Defs.dead, true);
     }
   }
 }

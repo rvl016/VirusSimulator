@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
-using VirusSimulatorAvalonia.Models.things;
-using VirusSimulatorAvalonia.Models.things.inanimates;
+using VirusSimulatorAvalonia.Models.defs;
+using VirusSimulatorAvalonia.Models.lib.things;
 
 namespace VirusSimulatorAvalonia.Models.things.animates {
-  public abstract class Animate<T> : Thing {
+  public abstract class Animate<AnimateType> : Thing {
 
+    public Accommodable accommodation; 
 
     protected Animate( float xCoordinate, float yCoordinate, ushort zCoordinate) : 
       base( xCoordinate, yCoordinate, zCoordinate) {
@@ -15,7 +16,11 @@ namespace VirusSimulatorAvalonia.Models.things.animates {
 
     protected abstract void defineNextRoute();
       
-    protected abstract List<T> getAnimatesOnSight();
+    protected abstract List<AnimateType> getAnimatesOnSight();
+
+    public void setAttached( bool isAttached) {
+      this.changeStatus( Defs.attached, isAttached);
+    }
 
     // getSight
     // It can move
