@@ -72,7 +72,7 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.paths {
     }
 
 
-    public override void makeEndPointOn( Path endpoint) {
+    public void makeEndPointOn( Path endpoint) {
       this.endPoints.Add( endpoint);
     }
 

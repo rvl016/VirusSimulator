@@ -27,15 +27,24 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.buildings.commerce {
     }
 
     public override void setOpenStatus( bool open) {
-      if (open && statusIncludes( (short) Defs.mandatoryClose))
+      if (open && statusIncludes( Defs.mandatoryClose))
         return;
-      this.changeStatus( (short) Defs.open, open);  
+      this.changeStatus( Defs.open, open);  
     }
 
     public override void definePeopleCapacity() {
       this.peopleCapacity = (uint) (this.effectiveArea * Consts.
         commercePopulationFactor);
     }
+
+    protected override void iterateLifeCycle() {
+      
+    }
+
+    public override void dumpProperties() {
+      
+    }
+
   }
 
 }

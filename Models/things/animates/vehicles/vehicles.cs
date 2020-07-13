@@ -16,5 +16,28 @@ namespace VirusSimulatorAvalonia.Models.things.animates.vehicles {
       base( xCoordinate, yCoordinate, 0) {
     }
 
+    protected override void defineNextRoute() {
+
+    }
+
+    protected override void iterateThroughPath() {
+
+    }
+
+    protected override List<Vehicle> getAnimatesOnSight() {
+      // This will bring in trouble when in a Corner
+      return this.getAccessibleVehicles().FindAll( 
+        vehicle => this.coordinates.getDistance( vehicle.coordinates) 
+          < Consts.vehicleRadius
+      );
+    }
+
+    private List<Vehicle> getAccessibleVehicles() {
+      return this.accommodation.getVehiclesNextTo( this);
+    }
+
+    public override void dumpProperties() {
+      
+    }
   }
 }

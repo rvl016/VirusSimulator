@@ -45,10 +45,6 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
     }
 
     public void setVisited( uint routeId, bool isVisited = true) {
-      if (Defs.debug && this.trackersAnnotations.GetValueOrDefault( 
-        routeId) == null)
-        throw new Exception( 
-          "Trying to modified non existent node annotation!");
       this.trackersAnnotations.GetValueOrDefault( routeId).visited = isVisited;
     }
 
@@ -81,9 +77,6 @@ namespace VirusSimulatorAvalonia.Models.lib.things {
     }
 
     public void addDestination( Building destination, Node neighbor) {
-      if (Defs.debug && ! this.neighbors.Contains( neighbor))
-        throw new Exception( 
-          "Trying to add destination for a unknowm neighbor.");
       if (this.destination2Neighbor.GetValueOrDefault( destination) == null) 
         this.destination2Neighbor.Add( destination, neighbor);
     }

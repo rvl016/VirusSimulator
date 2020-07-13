@@ -283,11 +283,11 @@ namespace VirusSimulatorAvalonia.Models.lib.map.buildingAlgorithms {
     }
 
     int getOppositeDxOf( ushort direction) {
-      return Common.getDxOfDirection( Common.getOppositeDirection( direction));
+      return Common.getDxOfDirection( Common.getOppositeDirectionOf( direction));
     }
 
     int getOppositeDyOf( ushort direction) {
-      return Common.getDyOfDirection( Common.getOppositeDirection( direction));
+      return Common.getDyOfDirection( Common.getOppositeDirectionOf( direction));
     }
   } 
 }

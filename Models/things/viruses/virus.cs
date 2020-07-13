@@ -23,7 +23,7 @@ namespace VirusSimulatorAvalonia.Models.things.virus {
       this.setIncubation();
     }
     public override void dumpProperties() {
-      
+
     }
 
     private void setIncubation() {
@@ -35,9 +35,15 @@ namespace VirusSimulatorAvalonia.Models.things.virus {
 
     private void terminateIncubation() {
       this.changeStatus( Defs.incubating, false);
+      this.setCurrentInfectionRadius();
       this.defineWhenImmunityWillSettle();
       this.iterateLifeCycle();
     }
+
+    private void setCurrentInfectionRadius() {
+      this.currentInfectionRadius = 
+        Consts.virusBaseRadius / this.host.healthIndex;
+    } 
 
     private void defineWhenImmunityWillSettle() {
       this.whenImmunityWillSettleInSecs = God.secondsSinceEpoch + 
@@ -59,6 +65,16 @@ namespace VirusSimulatorAvalonia.Models.things.virus {
       this.callSchedulerFor( this.iterateLifeCycle);
     }
 
+    private void tryToInfectPeople() {
+      List<Person> potentialHosts = this.getPeopleOnSight();
+      potentialHosts.ForEach( person => {
+        bool willInfectPerson = RandomEvents.virusWillInfectPerson();
+        if (willInfectPerson && ! person.statusIncludes( Defs.immune) 
+          && person.virus == null)
+          new Virus( person);
+      });
+    }
+
     private bool willKillHost() {
       return RandomEvents.virusWillKillHostByAgeAndHealthIdx(
         this.host.age, this.host.healthIndex);
@@ -73,6 +89,12 @@ namespace VirusSimulatorAvalonia.Models.things.virus {
       ThingsPackage.remove( this);
       this.host.virus = null;
       this.host = null;
+    }
+
+    private List<Person> getPeopleOnSight() {
+      List<Person> people = this.host.getAccessiblePeople();
+      return people.FindAll( person => person.coordinates.getDistance( 
+        this.coordinates) < this.currentInfectionRadius);
     }
   }
 }

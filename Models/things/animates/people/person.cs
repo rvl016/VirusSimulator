@@ -140,7 +140,7 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
     protected override List<Person> getAnimatesOnSight() {
       return this.getAccessiblePeople().FindAll( 
         person => this.coordinates.getDistance( person.coordinates) 
-        < Consts.personRadius);
+          < Consts.personRadius);
     }
 
     public List<Person> getAccessiblePeople() {
@@ -170,6 +170,10 @@ namespace VirusSimulatorAvalonia.Models.things.animates.people {
       // May cause process crash
       this.coordinates = null;
       this.changeStatus( Defs.dead, true);
+    }
+
+    public override void dumpProperties() {
+      
     }
   }
 }

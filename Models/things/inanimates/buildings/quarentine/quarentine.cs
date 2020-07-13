@@ -19,5 +19,13 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates.buildings.quarentine {
       this.peopleCapacity = (uint) (this.effectiveArea * Consts.
         quarentinePopulationFactor);
     }
+    
+    protected override void iterateLifeCycle() {
+
+    }
+
+    public override void dumpProperties() {
+      
+    }
   }
 }

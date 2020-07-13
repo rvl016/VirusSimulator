@@ -12,9 +12,9 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates {
       get { return this.getOpenStatus(); }
       set { this.setOpenStatus( value); }
     }
-    public abstract List<Accommodable> endPoints {
-      get;
-      set;
+    public virtual List<Accommodable> endPoints {
+      get { return new List<Accommodable>(); }
+      set {}
     }
     public float halfWidth;
     public float halfHeight;
@@ -30,9 +30,8 @@ namespace VirusSimulatorAvalonia.Models.things.inanimates {
 
     protected abstract void iterateLifeCycle();
 
-    public abstract void makeEndPointOn( Path endpoint);
 
-    protected void setOpenStatus( bool open) {
+    public virtual void setOpenStatus( bool open) {
       this.changeStatus( Defs.open, open);
     } 
 
